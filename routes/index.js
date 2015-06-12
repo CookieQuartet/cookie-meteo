@@ -1,9 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
-});
+var command = require("./command");
 
-module.exports = router;
+//router.get('/command', command.nombreDelModulo)
+//La idea seria que dividamos aca en exports.algo y eso recibe una funcion que trabajara
