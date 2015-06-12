@@ -1,0 +1,33 @@
+{
+  "name": "pruebaUSBSerial",
+  "version": "0.0.1",
+  "authors": [
+    "Martin Maestri <mmaestri@gmail.com>"
+  ],
+  "description": "Prueba de acceso a puerto serie con nodejs",
+  "moduleType": [
+    "node"
+  ],
+  "keywords": [
+    "serial",
+    "usb",
+    "node",
+    "test"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-material": "~0.9.0",
+    "angular-material-icons": "~0.4.0",
+    "highchart-ng": "~0.0.8",
+    "ui-router": "~0.2.14",
+    "highcharts": "~4.1.5"
+  }
+}
