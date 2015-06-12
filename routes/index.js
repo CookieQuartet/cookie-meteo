@@ -1,7 +1,9 @@
 var express = require('express');
 var router = express.Router();
 
-var command = require("./command");
+/* GET home page. */
+router.get('/', function(req, res, next) {
+  res.send('public/index.html');
+});
 
-//router.get('/command', command.nombreDelModulo)
-//La idea seria que dividamos aca en exports.algo y eso recibe una funcion que trabajara
+module.exports = router;

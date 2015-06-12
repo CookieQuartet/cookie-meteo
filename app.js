@@ -1,7 +1,7 @@
 var express = require('express');
 
 var path = require('path');
-var logger = require('morgan');
+//var logger = require('morgan');
 
 var app = express();
 var router = require('./routes');
@@ -10,7 +10,7 @@ var helperSocketConnection = require('./helper/socketConnection.js');
 
 
 
-app.use(logger('dev'));
+//app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'bower_components')));
 app.use(express.static(path.join(__dirname, 'node_modules')));
