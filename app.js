@@ -4,7 +4,6 @@ var path = require('path');
 var logger = require('morgan');
 
 var app = express();
-var router = require('./routes');
 
 var helperSocketConnection = require('./helper/socketConnection.js');
 
@@ -15,7 +14,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'bower_components')));
 app.use(express.static(path.join(__dirname, 'node_modules')));
 
-app.use('/', router);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
