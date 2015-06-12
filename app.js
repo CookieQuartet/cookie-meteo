@@ -58,10 +58,11 @@ var server = require('http').Server(socket_app);
 var io = require('socket.io')(server);
 server.listen(3001);
 
+/*
 app.use(function(req, res, next){
     helperSocketConnection.socketConn(io);
 });
-
-
+*/
+helperSocketConnection.socketConn(io);
 
 module.exports = app;

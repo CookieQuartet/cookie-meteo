@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var command = require('../routes/command');
+//var command = require('../routes/command');
 
 module.exports = function SerialDispatcher(serialPort) {
     function ConnHandler() {
