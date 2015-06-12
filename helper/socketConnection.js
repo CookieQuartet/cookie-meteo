@@ -4,8 +4,8 @@ exports.socketConn = function(io){
 
     var sDispatcher = new SerialDispatcher(serialPort);
 
-    io.on('connection', function (socket) {
 
+    io.on('connection', function (socket) {
         sDispatcher.connHandler.addSocket(socket);
 
         socket.on('request', function (request) {
