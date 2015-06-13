@@ -67,6 +67,21 @@
   background-color: #9c27b0 !important;
 }
 
+.cmi-icon-temperatura {
+  padding: 25px;
+  width: 70px;
+}
+
+.cmi-icon-viento {
+  padding: 30px 20px;
+  width: 90px;
+}
+
+.cmi-icon-humedad {
+  padding: 28px 12px;
+  width: 70px;
+}
+
 .cookie-meteo-grafico {
 
 }
@@ -78,8 +93,8 @@
 }
 
 .cmi-icon > img {
-  position: relative;
-  left: -5px;
+  /*padding: 25px;
+  width: 70px;*/
 }
 
 .cmi-text {

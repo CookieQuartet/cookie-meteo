@@ -40,7 +40,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                     description: 'Temperatura',
                     units: 'ºC',
                     value: 0,
-                    icon: 'img/climacons/svg/Thermometer-50.svg',
+                    icon: 'img/climacons/svg/Thermometer-50-white.svg',
                     visible: true,
                     selected: false,
                     series: {
@@ -59,7 +59,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                     description: 'Velocidad del viento',
                     units: 'km/h',
                     value: 0,
-                    icon: 'img/climacons/svg/Wind.svg',
+                    icon: 'img/climacons/svg/Wind-white.svg',
                     visible: true,
                     selected: false,
                     series: {
@@ -78,7 +78,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                     description: 'Humedad',
                     units: '%',
                     value: 0,
-                    icon: 'img/climacons/svg/Cloud-Drizzle-Alt.svg',
+                    icon: 'img/climacons/svg/Cloud-Drizzle-Alt-white.svg',
                     visible: true,
                     selected: false,
                     series: {
