@@ -38,35 +38,13 @@ module.exports = function SerialDispatcher(serialPort) {
                             .value()
                     }
                 };
-                /*sDispatcher.connHandler.emit({
-                 type: 'data',
-                 data: {
-                 message: 'Datos obtenidos',
-                 data: _.chain(data.split(';'))
-                 .remove(function (item) {
-                 return item.length !== 0;
-                 })
-                 .map(function (item) {
-                 return parseInt(item)
-                 })
-                 .value()
-                 }
-                 });*/
             } else {
                 _data = {
-                    type: 'data',
+                    type: 'server:data',
                     data: {
                         message: data
                     }
                 };
-                /*
-                 sDispatcher.connHandler.emit({
-                 type: 'data',
-                 data: {
-                 message: data
-                 }
-                 });
-                 */
             }
             recordObject.save(_data).then(function(object) {
                 console.log(_data);
