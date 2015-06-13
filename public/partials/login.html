@@ -1,0 +1,20 @@
+<div class="cookie-meteo-login" layout="column">
+    <section class="cmi-login-card">
+        <md-card layout-padding>
+            <md-content layout-padding class="autoScroll">
+                <md-input-container class="md-icon-float" >
+                    <md-icon md-svg-src="material-design-icons/social/svg/production/ic_person_24px.svg" class="cmi-name"></md-icon>
+                    <input ng-model="config.user.name" type="text" placeholder="Usuario">
+                </md-input-container>
+                <md-input-container >
+                    <md-icon md-svg-src="material-design-icons/action/svg/production/ic_lock_24px.svg" class="cmi-password"></md-icon>
+                    <input ng-model="config.user.password" type="password" placeholder="Contraseña" ng-required="true">
+                </md-input-container>
+            </md-content>
+            <section layout="row" layout-sm="column" layout-align="center center">
+                <md-button class="md-raised md-primary">Entrar</md-button>
+                <md-button class="md-raised">Cancelar</md-button>
+            </section>
+        </md-card>
+    </section>
+</div>

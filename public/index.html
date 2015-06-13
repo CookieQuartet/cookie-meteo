@@ -1,25 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="CookieMeteo">
     <head>
-        <title>Express</title>
+        <title>CookieMeteo</title>
         <link rel="stylesheet" href="/stylesheets/style.css">
         <link rel="stylesheet" href="/angular-material/angular-material.css">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <script src="/lodash/lodash.js"></script>
         <script src="/angular/angular.js"></script>
+        <script src="/angular-material/angular-material.js"></script>
     </head>
-    <body>
-        <h1>Express</h1>
-        <p>Welcome to Express</p>
+    <body ng-controller="MainController" >
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2>
+                    <a ui-sref="client"><span>CookieMeteo</span></a>
+                </h2>
+                <span flex=""></span>
+                <md-button class="md-icon-button" aria-label="Settings" ui-sref="login">
+                    <md-icon md-svg-icon="./material-design-icons/action/svg/production/ic_settings_24px.svg" style="color: white;"></md-icon>
+                    <md-tooltip>Administración</md-tooltip>
+                </md-button>
+            </div>
+        </md-toolbar>
+        <section layout="row" layout-fill flex class="toolbardemoBasicUsage" >
+            <md-content flex layout-padding>
+                <div ui-view></div>
+            </md-content>
+        </section>
     </body>
 </html>
-<script src="/angular-material/angular-material.js"></script>
-<script src="/angular-material-icons/angular-material-icons.js"></script>
-<script src="/angular-aria/angular-aria.js"></script>
-<script src="/ui-router/release/angular-ui-router.js"></script>
-<script src="/highcharts/adapters/standalone-framework.src.js"></script>
-<script src="/highcharts/highcharts.src.js"></script>
-<script src="/highchart-ng/dist/highcharts-ng.js"></script>
-<!--<script src="/datejs/build/date-es-AR.js"></script>-->
+<script src="angular-aria/angular-aria.js"></script>
+<script src="angular-animate/angular-animate.js"></script>
+<script src="ui-router/release/angular-ui-router.js"></script>
+<script src="ng-socket/ngSocket.js"></script>
+<script src="highcharts/adapters/standalone-framework.src.js"></script>
+<script src="highcharts/highcharts.src.js"></script>
+<script src="highchart-ng/dist/highcharts-ng.js"></script>
+<script src="datejs/build/date-es-AR.js"></script>
 <!--<script src="/javascripts/parse-1.4.2.js"></script>-->
-<script src="/parse/build/parse-latest.js"></script>
-<script src="/socket.io/node_modules/socket.io-client/socket.io.js"></script>
-<script src="/javascript/client.js"></script>
+<script src="parse/build/parse-latest.js"></script>
+<script src="socket.io/node_modules/socket.io-client/socket.io.js"></script>
+<script src="javascript/app.js"></script>
+<script src="javascript/controllers.js"></script>
+<script src="javascript/services.js"></script>
+<script src="javascript/directives.js"></script>
+<!--<script src="javascript/client.js"></script>-->

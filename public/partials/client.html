@@ -1,0 +1,100 @@
+<section class="cookie-meteo-client" layout-margin>
+    <div
+        layout="row"
+        layout-md="column"
+        layout-align-gt-md="column"
+        layout-align-lg="column"
+        layout-align-gt-lg="row"
+
+        layout-margin
+        layout-fill
+        layout-padding
+        layout-align="center center"
+        layout-sm="column">
+        <div
+            ng-repeat="item in config.indicadores track by item.id"
+            class="cookie-meteo-indicador cookie-meteo-block"
+            flex
+            flex-order="{{ $index+1 }}"
+            ng-class="{
+                'selected': item.selected,
+                'cmi-temperatura': item.id === 'temperatura',
+                'cmi-viento': item.id === 'viento',
+                'cmi-humedad': item.id === 'humedad'
+            }"
+            ng-if="item.visible"
+            ng-click="methods.select(item)">
+            <md-card>
+                <md-card-content
+                    layout="row"
+                    layout-md="row"
+                    layout-margin
+                    layout-fill
+                    layout-padding>
+                    <div class="md-list-item-text" flex layout="row" layout-md="column" layout-align="center center">
+                        <div class="md-2-line" layout-md="column">
+                            <h4 class="cmi-text-align">{{ item.description }}</h4>
+                            <div flex layout="row" layout-align="center center">
+                                <span class="cmi-text">{{ item.value }}</span>
+                                <div class="cmi-units">{{ item.units }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div flex layout="row" layout-align="center center" >
+                        <div
+                            class="md-button md-fab cmi-icon"
+                            ng-class="{
+                                    'cmi-icon-temperatura': item.id === 'temperatura',
+                                    'cmi-icon-viento': item.id === 'viento',
+                                    'cmi-icon-humedad': item.id === 'humedad'
+                                }">
+                            <img
+                                ng-src="{{ item.icon }}"
+                                class="md-icon"
+                                style="color: white;"
+                                ng-class="{
+                                    'cmi-icon-temperatura': item.id === 'temperatura',
+                                    'cmi-icon-viento': item.id === 'viento',
+                                    'cmi-icon-humedad': item.id === 'humedad'
+                                }"
+                                flex
+                                />
+                        </div>
+                    </div>
+                </md-card-content>
+            </md-card>
+        </div>
+    </div>
+    <section
+        layout="row"
+        layout-sm="column"
+        layout-align="end center"
+        ng-if="config.selected">
+        <div class="cmi-show-history" ng-if="!config.showLastRecords">
+            <span>Desde</span>
+            <input id="fc_desde" class="cmi-date" type="date"/>
+            <span>Hasta</span>
+            <input id="fc_hasta" class="cmi-date" type="date"/>
+        </div>
+        <md-checkbox ng-model="config.showLastRecords" aria-label="Mostrar últimos registros">
+            Mostrar últimos registros
+        </md-checkbox>
+        <md-button class="md-fab" aria-label="Guardar registros">
+            <md-icon md-svg-src="./material-design-icons/content/svg/design/ic_save_24px.svg"></md-icon>
+            <md-tooltip>Descargar registros</md-tooltip>
+        </md-button>
+
+    </section>
+    <div
+        hide-sm
+        class="cookie-meteo-grafico cookie-meteo-block"
+        ng-if="config.selected"
+        ng-class="{
+            'cmi-temperatura selected ': config.indicadores.temperatura.selected,
+            'cmi-viento selected ': config.indicadores.viento.selected,
+            'cmi-humedad selected ': config.indicadores.humedad.selected
+            }"
+        flex>
+        <highchart id="chart1" config="config.chart"></highchart>
+    </div>
+</section>
