@@ -1,4 +1,4 @@
-angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSocket'])
+angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSocket', 'CookieMeteoServices'])
     .config(["$socketProvider", function ($socketProvider) {
       $socketProvider.setUrl("http://localhost:3001");
       Parse.initialize("iHBoW7NiugHfz1TBYimBbCuVgaNLiu2ojq8uqIBH", "F3oYWOs8MGa6Ct5osHiLleyxUt1WFi6FdKeuaY2k");
@@ -16,7 +16,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
             controller: function($scope) {
               $scope.config = {
                 user: {
-                  name: 'admin',
+                  name: '',
                   password: ''
                 }
               }
@@ -26,12 +26,6 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
             url: "/",
             templateUrl: "partials/client.html",
             controller: function($scope) {
-              $scope.data = {
-                series: [
-                  {"name": "Some data", "data": [1, 2, 4, 7, 3]}
-                ]
-              };
-
               $scope.config = {
                 selected: null,
                 indicadores: {
@@ -122,13 +116,10 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                       }
                     }
                   },
-                  series: $scope.data.series,
+                  series: [],
                   title: {
                     text: 'Datos históricos'
                   },
-                  /*credits: {
-                    enabled: false
-                  },*/
                   loading: false,
                   size: {},
                   xAxis: {
