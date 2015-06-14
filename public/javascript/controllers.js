@@ -1,4 +1,25 @@
 angular.module('CookieMeteo')
-    .controller('MainController', function($scope, $timeout, $mdSidenav, $mdUtil, $log, MeteoConfig) {
-      MeteoConfig.login({ username: 'guest', password: '123456' });
+  .controller('MainController', function($scope, $state, $rootScope, $timeout, MeteoConfig) {
+
+    $rootScope.$on('login', function(event) {
+      $scope.config = {
+        username: localStorage.getItem('cookie-meteo-username'),
+        sessionToken: localStorage.getItem('cookie-meteo-session-token')
+      };
     });
+
+    $rootScope.$on('logout', function(event) {
+      MeteoConfig.logout();
+      $scope.config = {
+        username: null,
+        sessionToken: null
+      };
+      $state.go('client');
+    });
+
+    $scope.config = {
+      username: localStorage.getItem('cookie-meteo-username'),
+      sessionToken: localStorage.getItem('cookie-meteo-session-token')
+    };
+
+  });

@@ -17,40 +17,44 @@ module.exports = function SerialDispatcher(serialPort) {
             });
         };
         this.emit = function(event) {
+          if(this.selectedSocket) {
             this.selectedSocket.emit(event.type, event.data);
+          }
         }
     }
     function init() {
-        serialPort.on('data', function(data) {
-            var _data;
-            if(data.indexOf(';') >= 0) {
-                data = {
-                    type: 'data',
-                    data: {
-                        message: 'Datos obtenidos',
-                        data: _.chain(data.split(';'))
-                            .remove(function (item) {
-                                return item.length !== 0;
-                            })
-                            .map(function (item) {
-                                return parseInt(item)
-                            })
-                            .value()
-                    }
-                };
-            } else {
-                _data = {
-                    type: 'server:data',
-                    data: {
-                        message: data
-                    }
-                };
+      // seleccion de puertos, siempre selecciona todos
+      serialPort.open(function (error) {
+        serialPort.write('SCAN02' + "\n");
+      });
+
+      serialPort.on('data', function(data) {
+        var _data;
+        if(data.indexOf(';') >= 0) {
+          _data = {
+            type: 'server:data',
+            data: {
+              message: 'Datos obtenidos',
+              data: _.chain(data.split(';'))
+                .remove(function (item) {
+                    return item.length !== 0;
+                })
+                .map(function (item) {
+                    return parseInt(item)
+                })
+                .value()
             }
-            recordObject.save(_data).then(function(object) {
-                console.log(_data);
-                sDispatcher.connHandler.emit(_data);
-            });
-        });
+          };
+        } else {
+          _data = {
+            type: 'server:data',
+            data: {
+              message: data
+            }
+          };
+        }
+        _self.connHandler.emit(_data);
+      });
     }
     var _self = this;
     this.connHandler = new ConnHandler();

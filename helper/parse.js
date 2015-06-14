@@ -96,7 +96,10 @@ Parse.prototype = {
   loginUser: function (username, password, callback) {
     parseRequest.call(this, 'GET', '/1/login/?username=' + username + '&password=' + password, null, callback);
   },
-
+  // logout user
+  logout: function (sessionToken, callback) {
+    parseRequest.call(this, 'POST', '/1/logout', null, callback, null, sessionToken);
+  },
   // retrieve current user
   me: function (sessionToken, callback) {
     parseRequest.call(this, 'GET', '/1/users/me', null, callback, null, sessionToken);
@@ -382,10 +385,12 @@ function parseRequest(method, path, data, callback, contentType, sessionToken) {
     case 'POST':
     case 'PUT':
       body = contentType ? data : typeof data === 'object' ? JSON.stringify(data) : data;
-      if ( !contentType ) {
-        headers['Content-length'] = Buffer.byteLength(body);
+      if(data) {
+        if ( !contentType ) {
+          headers['Content-length'] = Buffer.byteLength(body);
+        }
+        headers['Content-type'] = contentType || 'application/json';
       }
-      headers['Content-type'] = contentType || 'application/json';
       break;
     case 'DELETE':
       headers['Content-length'] = 0;

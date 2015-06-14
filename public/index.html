@@ -16,10 +16,24 @@
                     <a ui-sref="client"><span>CookieMeteo</span></a>
                 </h2>
                 <span flex=""></span>
-                <md-button class="md-icon-button" aria-label="Settings" ui-sref="login">
+                <md-button class="md-icon-button" aria-label="Client" ui-sref="client">
+                    <md-icon md-svg-icon="./material-design-icons/action/svg/production/ic_settings_24px.svg" style="color: white;"></md-icon>
+                    <md-tooltip>Monitor</md-tooltip>
+                </md-button>
+                <md-button ng-if="config.sessionToken && config.username === 'admin'" class="md-icon-button" aria-label="Admin" ui-sref="admin">
                     <md-icon md-svg-icon="./material-design-icons/action/svg/production/ic_settings_24px.svg" style="color: white;"></md-icon>
                     <md-tooltip>Administración</md-tooltip>
                 </md-button>
+                <md-button ng-if="!config.sessionToken" class="md-icon-button" aria-label="Login" ui-sref="login">
+                    <md-icon md-svg-icon="./material-design-icons/social/svg/production/ic_person_48px.svg" style="color: white;"></md-icon>
+                    <md-tooltip>Iniciar sesión</md-tooltip>
+                </md-button>
+                <md-button ng-if="config.sessionToken" class="md-icon-button" aria-label="Logout" ng-click="$emit('logout')">
+                    <md-icon md-svg-icon="./material-design-icons/action/svg/production/ic_exit_to_app_48px.svg" style="color: white;"></md-icon>
+                    <md-tooltip>Salir</md-tooltip>
+                </md-button>
+
+
             </div>
         </md-toolbar>
         <section layout="row" layout-fill flex class="toolbardemoBasicUsage" >

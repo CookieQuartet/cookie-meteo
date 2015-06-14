@@ -7,31 +7,44 @@ function SocketConnection(io){
   var serverConfig = new ServerConfig();
 
   io.on('connection', function (socket) {
+    // se agrega el socket al dispatcher para que lo tenga en cuenta al momento de enviar datos
     sDispatcher.connHandler.addSocket(socket);
-
-    // pedido de datos de un cliente
+    // un cliente quiere ejecutar un comando sobre la placa
     socket.on('client:request', function (request) {
       sDispatcher.addRequest(socket, request);
       sDispatcher.wakeUp();
     });
-
+    // un cliente pide datos
+    socket.on('client:requestData', function (request) {
+      sDispatcher.addRequest(socket, { command: 'RDAS' });
+      sDispatcher.wakeUp();
+    });
     // pedido de configuracion de un cliente
     socket.on('client:get_config', function (config) {
-      socket.emit('server:set_config', {});
+      socket.emit('server:set_config', serverConfig.config());
     });
-
     // un cliente quiere modificar la configuracion
-    socket.on('client:set_config', function (config) {
+    socket.on('client:set_config', function (event) {
 
     });
-
+    // un cliente chequea si esta logueado
+    socket.on('client:checkLogged', function(event) {
+      serverConfig.checkLogged(event.token, function(response) {
+        socket.emit('server:checkLogged', response);
+      });
+    });
     // un cliente quiere iniciar sesion
     socket.on('client:login', function (login) {
       serverConfig.login(login, function(response) {
         socket.emit('server:login', response);
       });
     });
-
+    // un cliente cierra sesion
+    socket.on('client:logout', function (logout) {
+      serverConfig.logout(logout.token, function(response) {
+        socket.emit('server:logout', response);
+      });
+    });
     // un cliente se desconecta
     socket.on('disconnect', function () {
       sDispatcher.connHandler.removeSocket(socket.id);

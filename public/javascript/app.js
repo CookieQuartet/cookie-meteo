@@ -4,28 +4,106 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
       Parse.initialize("iHBoW7NiugHfz1TBYimBbCuVgaNLiu2ojq8uqIBH", "F3oYWOs8MGa6Ct5osHiLleyxUt1WFi6FdKeuaY2k");
     }])
     .config(function($stateProvider, $urlRouterProvider) {
+      function checkLogged(scope, MeteoConfig, callback) {
+        var username = localStorage.getItem('cookie-meteo-username') || null,
+            token = localStorage.getItem('cookie-meteo-session-token') || null;
+        MeteoConfig.checkLogged(token).then(function(userData) {
+          callback.call(null, userData);
+        });
+      }
+
       $urlRouterProvider.otherwise("/");
       $stateProvider
           .state('admin', {
             url: "/admin",
-            templateUrl: "partials/admin.html"
+            templateUrl: "partials/admin.html",
+            controller: function($scope, MeteoConfig, $state) {
+              checkLogged($scope, MeteoConfig, function(userData) {
+                if(!userData || userData.username !== 'admin') {
+                  $state.go('client');
+                }
+              });
+              $scope.methods = {
+                logout: function() {
+                  MeteoConfig.logout();
+                  $state.go('client');
+                }
+              }
+            }
           })
           .state('login', {
             url: "/login",
             templateUrl: "partials/login.html",
-            controller: function($scope) {
+            controller: function($scope, $state, MeteoConfig, $mdToast, $animate) {
               $scope.config = {
                 user: {
-                  name: '',
-                  password: ''
+                  login: {
+                    username: '',
+                    password: ''
+                  },
+                  data: null
                 }
-              }
+              };
+              $scope.$state = $state;
+              $scope.methods = {
+                checkLogged: function() {
+                  checkLogged($scope, MeteoConfig, function(userData) {
+                    if(userData) {
+                      $scope.config.user.data = userData;
+                      switch(userData.username) {
+                        case 'admin':
+                          $state.go('admin');
+                          break;
+                        case 'guest':
+                          $state.go('client');
+                          break;
+                      }
+                    }
+                  });
+                },
+                login: function() {
+                  MeteoConfig.login($scope.config.user.login).then(function(userData) {
+                    if(userData) {
+                      // usuario reconocido
+                      localStorage.setItem('cookie-meteo-username', userData.username);
+                      localStorage.setItem('cookie-meteo-session-token', userData.sessionToken);
+                      $scope.$emit('login');
+                      $scope.config.user.data = userData;
+                      switch(userData.username) {
+                        case 'admin':
+                          $state.go('admin');
+                          break;
+                        case 'guest':
+                        default:
+                          $state.go('client');
+                          break;
+                      }
+                    } else {
+                      $scope.methods.loginError();
+                    }
+                  });
+                },
+                loginError: function() {
+                  $mdToast.show(
+                    $mdToast.simple()
+                      .content('Error de validación de usuario!')
+                      .position('top left')
+                      .hideDelay(3000)
+                  );
+                },
+                logout: function() {
+                  MeteoConfig.logout();
+                  $state.go('client');
+                }
+              };
+
+              $scope.methods.checkLogged();
             }
           })
           .state('client', {
             url: "/",
             templateUrl: "partials/client.html",
-            controller: function($scope) {
+            controller: function($scope, MeteoConfig) {
               $scope.config = {
                 selected: null,
                 indicadores: {
@@ -152,6 +230,10 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                 },
                 getData: function(indicador) {
 
+                },
+                logout: function() {
+                  MeteoConfig.logout();
+                  $state.go('client');
                 }
               }
             }
