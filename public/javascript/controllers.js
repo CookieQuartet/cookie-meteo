@@ -1,5 +1,6 @@
 angular.module('CookieMeteo')
   .controller('MainController', function($scope, $state, $rootScope, $timeout, MeteoConfig) {
+    $scope.$state = $state;
 
     $rootScope.$on('login', function(event) {
       $scope.config = {

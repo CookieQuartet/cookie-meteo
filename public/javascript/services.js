@@ -10,6 +10,7 @@ angular.module('CookieMeteoServices', [])
 
       $socket.on('server:data', function (data) {
         console.log(data);
+        $rootScope.$broadcast('server:data', data);
       });
       $socket.on('server:set_config', function (data) {
         if(typeof data !== 'undefined') {

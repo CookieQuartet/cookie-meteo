@@ -90,10 +90,6 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                       .position('top left')
                       .hideDelay(3000)
                   );
-                },
-                logout: function() {
-                  MeteoConfig.logout();
-                  $state.go('client');
                 }
               };
 
@@ -115,14 +111,16 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                     icon: 'img/climacons/svg/Thermometer-50-white.svg',
                     visible: true,
                     selected: false,
+                    thresholdMin: false,
+                    thresholdMax: false,
                     series: {
                       "name": "Temperatura",
                       "data": [
-                        {x: (new Date()).getTime(), y: 10 },
+                        /*{x: (new Date()).getTime(), y: 10 },
                         {x: (new Date()).getTime() + 1000, y: 5 },
                         {x: (new Date()).getTime() + 2000, y: 22 },
                         {x: (new Date()).getTime() + 3000, y: 13 },
-                        {x: (new Date()).getTime() + 4000, y: 18 }
+                        {x: (new Date()).getTime() + 4000, y: 18 }*/
                       ]
                     }
                   },
@@ -134,14 +132,16 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                     icon: 'img/climacons/svg/Wind-white.svg',
                     visible: true,
                     selected: false,
+                    thresholdMin: false,
+                    thresholdMax: false,
                     series: {
                       "name": "Velocidad del viento",
                       "data": [
-                        {x: (new Date()).getTime(), y: 10 },
+                        /*{x: (new Date()).getTime(), y: 10 },
                         {x: (new Date()).getTime() + 1000, y: 5 },
                         {x: (new Date()).getTime() + 2000, y: 22 },
                         {x: (new Date()).getTime() + 3000, y: 13 },
-                        {x: (new Date()).getTime() + 4000, y: 18 }
+                        {x: (new Date()).getTime() + 4000, y: 18 }*/
                       ]
                     }
                   },
@@ -153,14 +153,16 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                     icon: 'img/climacons/svg/Cloud-Drizzle-Alt-white.svg',
                     visible: true,
                     selected: false,
+                    thresholdMin: false,
+                    thresholdMax: false,
                     series: {
                       "name": "Humedad",
                       "data": [
-                        {x: (new Date()).getTime(), y: 10 },
+                        /*{x: (new Date()).getTime(), y: 10 },
                         {x: (new Date()).getTime() + 1000, y: 5 },
                         {x: (new Date()).getTime() + 2000, y: 22 },
                         {x: (new Date()).getTime() + 3000, y: 13 },
-                        {x: (new Date()).getTime() + 4000, y: 18 }
+                        {x: (new Date()).getTime() + 4000, y: 18 }*/
                       ]
                     }
                   }
@@ -218,6 +220,27 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                 showLastRecords: true
               };
 
+              $scope.$on('server:data', function(event, message) {
+                if(message.data.temperatura){
+                  $scope.config.indicadores.temperatura.thresholdMin = message.data.temperatura.minThresholdAlarm;
+                  $scope.config.indicadores.temperatura.thresholdMax = message.data.temperatura.maxThresholdAlarm;
+                  $scope.config.indicadores.temperatura.value = message.data.temperatura.value;
+                  $scope.config.indicadores.temperatura.series.data.push({x: (new Date()).getTime(), y: message.data.temperatura.value })
+                }
+                if(message.data.viento){
+                  $scope.config.indicadores.viento.thresholdMin = message.data.viento.minThresholdAlarm;
+                  $scope.config.indicadores.viento.thresholdMax = message.data.viento.maxThresholdAlarm;
+                  $scope.config.indicadores.viento.value = message.data.viento.value;
+                  $scope.config.indicadores.viento.series.data.push({x: (new Date()).getTime(), y: message.data.viento.value })
+                }
+                if(message.data.humedad){
+                  $scope.config.indicadores.humedad.thresholdMin = message.data.humedad.minThresholdAlarm;
+                  $scope.config.indicadores.humedad.thresholdMax = message.data.humedad.maxThresholdAlarm;
+                  $scope.config.indicadores.humedad.value = message.data.humedad.value;
+                  $scope.config.indicadores.humedad.series.data.push({x: (new Date()).getTime(), y: message.data.humedad.value })
+                }
+              });
+
               $scope.methods = {
                 select: function(indicador) {
                   _.each($scope.config.indicadores, function(item) {
@@ -228,8 +251,8 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                   $scope.config.chart.series.length = 0;
                   $scope.config.chart.series.push(indicador.series);
                 },
-                getData: function(indicador) {
-
+                getData: function() {
+                  MeteoConfig.request();
                 },
                 logout: function() {
                   MeteoConfig.logout();

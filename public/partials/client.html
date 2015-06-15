@@ -24,7 +24,10 @@
             }"
             ng-if="item.visible"
             ng-click="methods.select(item)">
-            <md-card>
+            <md-card ng-class="{
+                    'cmi-alarm-low': item.thresholdMin,
+                    'cmi-alarm-high': item.thresholdMax
+                }">
                 <md-card-content
                     layout="row"
                     layout-md="row"
@@ -33,29 +36,30 @@
                     layout-padding>
                     <div flex="40" layout="row" layout-align="center center" >
                         <div
-                                class="md-button md-fab cmi-icon"
+                            class="md-button md-fab cmi-icon"
+                            ng-class="{
+                                'cmi-icon-temperatura': item.id === 'temperatura',
+                                'cmi-icon-viento': item.id === 'viento',
+                                'cmi-icon-humedad': item.id === 'humedad'
+                            }">
+                            <img
+                                ng-src="{{ item.icon }}"
+                                ng-click="methods.getData()"
+                                class="md-icon"
+                                style="fill: white;"
                                 ng-class="{
                                     'cmi-icon-temperatura': item.id === 'temperatura',
                                     'cmi-icon-viento': item.id === 'viento',
                                     'cmi-icon-humedad': item.id === 'humedad'
-                                }">
-                            <img
-                                    ng-src="{{ item.icon }}"
-                                    class="md-icon"
-                                    style="fill: white;"
-                                    ng-class="{
-                                    'cmi-icon-temperatura': item.id === 'temperatura',
-                                    'cmi-icon-viento': item.id === 'viento',
-                                    'cmi-icon-humedad': item.id === 'humedad'
                                 }"
-                                    flex/>
+                                flex/>
                         </div>
                     </div>
                     <div class="md-list-item-text" flex="50" layout="row" layout-md="column" layout-align="center center">
                         <div class="md-2-line" layout-md="column">
                             <h4 class="cmi-text-align">{{ item.description }}</h4>
                             <div flex layout="row" layout-align="center center">
-                                <span class="cmi-text">{{ item.value }}</span>
+                                <span class="cmi-text">{{ item.value | number:2 }}</span>
                                 <div class="cmi-units">{{ item.units }}</div>
                             </div>
                         </div>

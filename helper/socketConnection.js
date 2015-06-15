@@ -1,14 +1,16 @@
 function SocketConnection(io){
-  var serialPort = require('./serialPort');
+  //var serialPort = require('./serialPort');
   var SerialDispatcher = require('./serialDispatcher');
   var ServerConfig = require('./serverConfig');
 
-  var sDispatcher = new SerialDispatcher(serialPort);
+  //var sDispatcher = new SerialDispatcher(serialPort);
   var serverConfig = new ServerConfig();
+  var sDispatcher = new SerialDispatcher(serverConfig);
 
   io.on('connection', function (socket) {
     // se agrega el socket al dispatcher para que lo tenga en cuenta al momento de enviar datos
     sDispatcher.connHandler.addSocket(socket);
+
     // un cliente quiere ejecutar un comando sobre la placa
     socket.on('client:request', function (request) {
       sDispatcher.addRequest(socket, request);

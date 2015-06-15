@@ -15,21 +15,25 @@ var ServerConfig = function() {
         estacion: {
           sensores: {
             temperatura: {
-              thresholdMax: 50,
-              thresholdMin: 0,
               active: true,
               channel: 0,
+              thresholds: {
+                max: 50,
+                min: 0
+              },
               transfer: {
-                a: 10,
+                a: 1,
                 b: 20,
                 c: 30
               }
             },
             viento: {
-              thresholdMax: 50,
-              thresholdMin: 0,
               active: true,
-              channel: 1,
+              channel: 0,
+              thresholds: {
+                max: 50,
+                min: 0
+              },
               transfer: {
                 a: 10,
                 b: 20,
@@ -37,10 +41,12 @@ var ServerConfig = function() {
               }
             },
             humedad: {
-              thresholdMax: 50,
-              thresholdMin: 0,
               active: true,
-              channel: 2,
+              channel: 0,
+              thresholds: {
+                max: 50,
+                min: 0
+              },
               transfer: {
                 a: 10,
                 b: 20,
@@ -115,9 +121,62 @@ var ServerConfig = function() {
     return _.clone(config);
   };
   // inicializacion
+
   this.init().then(function() {
-    //self.setConfig({});
+    /*
+    self.setConfig({
+      id: 'configObject',
+      estacion: {
+        sensores: {
+          temperatura: {
+            id: 'temperatura',
+            active: true,
+            channel: 0,
+            thresholds: {
+              max: 50,
+              min: 0
+            },
+            transfer: {
+              a: 0,
+              b: 51.28,
+              c: -20.5128
+            }
+          },
+          viento: {
+            id: 'viento',
+            active: true,
+            channel: 1,
+            thresholds: {
+              max: 216,
+              min: 1.08
+            },
+            transfer: {
+              a: 0,
+              b: 17.784,
+              c: 0.828
+            }
+          },
+          humedad: {
+            id: 'humedad',
+            active: true,
+            channel: 2,
+            thresholds: {
+              max: 50,
+              min: 0
+            },
+            transfer: {
+              a: 0,
+              b: 1,
+              c: 0.5
+            }
+          }
+        }
+      }
+    });
+    */
   });
+
+  //this.set('Config', config);
 };
 
 module.exports = ServerConfig;

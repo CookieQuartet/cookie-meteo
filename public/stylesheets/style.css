@@ -124,3 +124,11 @@
   margin: 10px 15% 0 15%;
 }
 
+.cmi-alarm-low {
+  background-color: yellow;
+}
+
+.cmi-alarm-high {
+  background-color: red;
+  color:white;
+}
