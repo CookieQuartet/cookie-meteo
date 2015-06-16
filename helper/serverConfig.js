@@ -4,7 +4,6 @@ var Q = require('q');
 
 var app = new Parse({
   app_id:"iHBoW7NiugHfz1TBYimBbCuVgaNLiu2ojq8uqIBH",
-  //master_key:"U1lv9HnU3QCvRaKibxC2GUfC3iaEMbY8eojxf5Z5"
   api_key: "utg0CdEubwtz0m2meWqPRnh1nOnyMBFVMGG3aoNN"
 });
 
