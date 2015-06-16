@@ -34,6 +34,9 @@ angular.module('CookieMeteoServices', [])
         localStorage.removeItem('cookie-meteo-session-token');
         //$rootScope.$broadcast('logout');
       });
+      $socket.on('server:set_acq_status', function(status) {
+        $rootScope.$broadcast('acqStatus', { status: status });
+      });
       var service =  {
         login: function(login) {
           loginDefer = $q.defer();
@@ -58,9 +61,16 @@ angular.module('CookieMeteoServices', [])
           loginDefer = $q.defer();
           $socket.emit('client:checkLogged', { token: token });
           return loginDefer.promise;
+        },
+        startAcq: function(status) {
+          $socket.emit('client:startAcq');
+        },
+        stopAcq: function(status) {
+          $socket.emit('client:stopAcq');
         }
       };
       $socket.emit('client:get_config');
+      $socket.emit('client:get_acq:status');
       $socket.emit('client:request', { command: 'RDAS' });
       return service;
   });

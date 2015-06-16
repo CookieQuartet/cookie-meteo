@@ -16,6 +16,22 @@
                     <a ui-sref="client"><span>CookieMeteo</span></a>
                 </h2>
                 <span flex=""></span>
+                <md-button
+                    ng-if="config.sessionToken && config.username === 'admin' && !config.acquiring"
+                    class="md-icon-button"
+                    aria-label="Start"
+                    ng-click="$emit('startAcq')">
+                    <md-icon md-svg-icon="./material-design-icons/av/svg/production/ic_play_arrow_48px.svg" style="color: white;"></md-icon>
+                    <md-tooltip>Iniciar</md-tooltip>
+                </md-button>
+                <md-button
+                    ng-if="config.sessionToken && config.username === 'admin' && config.acquiring"
+                    class="md-icon-button"
+                    aria-label="Stop"
+                    ng-click="$emit('stopAcq')">
+                    <md-icon md-svg-icon="./material-design-icons/av/svg/production/ic_pause_48px.svg" style="color: white;"></md-icon>
+                    <md-tooltip>Detener</md-tooltip>
+                </md-button>
                 <md-button ng-if="!$state.is('client')" class="md-icon-button" aria-label="Client" ui-sref="client">
                     <md-icon md-svg-icon="./material-design-icons/action/svg/production/ic_home_48px.svg" style="color: white;"></md-icon>
                     <md-tooltip>Monitor</md-tooltip>

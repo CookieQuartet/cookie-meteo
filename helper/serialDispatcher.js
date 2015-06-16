@@ -4,7 +4,7 @@ var transformData = require('./transformData');
 
 function SerialDispatcher(serverConfig) {
   var _self = this;
-  var _serialPort = new SerialPortFactory();
+  this._serialPort = null;
   function ConnHandler() {
       this.sockets = {};
       this.selectedSocket = null;
@@ -25,96 +25,66 @@ function SerialDispatcher(serverConfig) {
         }
       }
   }
+  function processData(data) {
+    var values = _.chain(data.split(';'))
+        .remove(function (item) { return item.length !== 0; })
+        .map(function (item) { return parseInt(item) })
+        .value();
+    return (function() {
+      var response = {},
+          sensores = _.filter(serverConfig.config().estacion.sensores, { active: true });
+      _.each(sensores, function(sensor) {
+        response[sensor.id] = transformData(values[sensor.channel], sensor.transfer, sensor.thresholds)
+      });
+      return response;
+    })();
+  }
   function init() {
     // seleccion de puertos, siempre selecciona todos
-    _serialPort.open(function (error) {
-      _serialPort.write('SCAN02' + "\n");
+    _self._serialPort = new SerialPortFactory();
+    _self._serialPort.open(function (error) {
+      _self._serialPort.write('SCAN02' + "\n");
     });
-    /*
-    _serialPort.on('data', function(data) {
-      var _data;
-      if(data.indexOf(';') >= 0) {
-        _data = {
-          type: 'server:data',
-          data: {
-            message: 'Datos obtenidos',
-            data: _.chain(data.split(';'))
-                .remove(function (item) {
-                  return item.length !== 0;
-                })
-                .map(function (item) {
-                  return parseInt(item)
-                })
-                .value()
-          }
-        };
-      } else {
-        _data = {
-          type: 'server:data',
-          data: {
-            message: data
-          }
-        };
-      }
-      _self.connHandler.emit(_data);
-    });
-    */
-    _serialPort.on('data', function(data) {
-      var _data;
+    _self._serialPort.on('data', function(data) {
       if(data.indexOf(';') >= 0) {
         // son datos para enviar a los clientes
-        var values = _.chain(data.split(';'))
-              .remove(function (item) { return item.length !== 0; })
-              .map(function (item) { return parseInt(item) })
-              .value();
-        var responseValues = (function() {
-              var response = {},
-                  sensores = _.filter(serverConfig.config().estacion.sensores, { active: true });
-              _.each(sensores, function(sensor) {
-                response[sensor.id] = transformData(values[sensor.channel], sensor.transfer, sensor.thresholds)
-              });
-              return response;
-            })();
-
-        _data = {
+        _self.connHandler.broadcast({
           type: 'server:data',
           data: {
             message: 'Datos obtenidos',
-            data: responseValues
+            data: processData(data)
           }
-        };
-        _self.connHandler.broadcast(_data);
+        });
       } else {
-        _data = {
+        // son la respuesta de un comando
+        _self.connHandler.emit({
           type: 'server:data',
           data: {
             message: data
           }
-        };
-        _self.connHandler.emit(_data);
+        });
       }
-
     });
   }
   this.connHandler = new ConnHandler();
   this.requests = [];
   this.addRequest = function(socket, request) {
-      _self.requests.push({socket: socket, request: request });
+    _self.requests.push({socket: socket, request: request });
   };
   this.wakeUp = function() {
-      if(_self.requests.length) {
-          _self.processQueue();
-      }
+    if(_self.requests.length) {
+      _self.processQueue();
+    }
   };
   this.processRequest = function(requestItem) {
-      _serialPort.open(function (error) {
+    this._serialPort.open(function (error) {
           var command = requestItem.request.command,
               value = requestItem.request.params ? requestItem.request.params: '';
           if ( error ) {
               console.log('failed to open: '+ error);
           } else {
               _self.connHandler.selectedSocket = requestItem.socket;
-              _serialPort.write(command + value + "\n");
+            _self._serialPort.write(command + value + "\n");
           }
       });
   };
@@ -124,7 +94,11 @@ function SerialDispatcher(serverConfig) {
       }
   };
   this.destroy = function() {
-      _serialPort.close();
+    _self._serialPort.close();
+  };
+  this.restart = function() {
+    this.destroy();
+    init();
   };
   init();
 }
