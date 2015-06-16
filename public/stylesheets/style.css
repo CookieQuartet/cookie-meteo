@@ -92,6 +92,27 @@
   min-width: 100px !important;
 }
 
+.cmi-icon-mini {
+  width:60px !important;
+  height: 60px !important;
+  min-width: 60px !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.cmi-icon-mini-mini {
+  width:32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  margin-left:16px;
+}
+
+.cmi-icon-sub {
+  margin-right:16px !important;
+}
+
 .cmi-icon > img {
   /*padding: 25px;
   width: 70px;*/
@@ -131,4 +152,41 @@
 .cmi-alarm-high {
   background-color: red;
   color:white;
+}
+
+.cookie-meteo-admin md-whiteframe {
+  background: #fff;
+  margin: 20px;
+  padding: 20px;
+}
+
+.cookie-meteo-admin md-divider {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.cmi-text-units,
+.cmi-input-transfer {
+  text-align: center;
+  width:50px;
+}
+
+.cmi-text-transfer {
+  text-align: center;
+  padding:10px;
+}
+
+.cookie-meteo-admin {
+  max-width: 800px;
+  margin: 16px;
+  box-sizing: border-box;
+}
+
+.cmi-input-mail {
+  width:400px;
+}
+
+.cookie-meteo-admin .md-subheader {
+  margin: 0 !important;
+  background-color: #eeeeee;
 }

@@ -6,6 +6,7 @@ function SocketConnection(io){
 
   var serverConfig = new ServerConfig();
   var sDispatcher = new SerialDispatcher(serverConfig);
+  //var timer = new Timer(serverConfig.config().interval, function() {
   var timer = new Timer(1000, function() {
     sDispatcher.addRequest(null, { command: 'RDAS' });
     sDispatcher.wakeUp();
@@ -28,6 +29,15 @@ function SocketConnection(io){
     // estado de la adquisicion
     socket.on('client:get_acq_status', function(){
       socket.emit('server:set_acq_status', timer.running());
+    });
+    // configurar intervalo de adquisicion
+    socket.on('client:set_acq_interval', function(config){
+      serverConfig.setConfig(config).then(function(config) {
+        timer
+          .setInterval(config.interval)
+          .stop()
+          .start();
+      });
     });
     // un cliente quiere ejecutar un comando sobre la placa
     socket.on('client:request', function (request) {

@@ -1,6 +1,11 @@
 angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSocket', 'CookieMeteoServices'])
     .config(["$socketProvider", function ($socketProvider) {
       $socketProvider.setUrl("http://localhost:3001");
+      Highcharts.setOptions({
+        global: {
+          useUTC: false
+        }
+      });
       Parse.initialize("iHBoW7NiugHfz1TBYimBbCuVgaNLiu2ojq8uqIBH", "F3oYWOs8MGa6Ct5osHiLleyxUt1WFi6FdKeuaY2k");
     }])
     .config(function($stateProvider, $urlRouterProvider) {
@@ -23,6 +28,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                   $state.go('client');
                 }
               });
+              $scope.config = MeteoConfig.config();
               $scope.methods = {
                 logout: function() {
                   MeteoConfig.logout();
@@ -100,7 +106,9 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
             url: "/",
             templateUrl: "partials/client.html",
             controller: function($scope, MeteoConfig) {
-              $scope.config = {
+              /*
+              var _config = MeteoConfig.config();
+              _config = {
                 selected: null,
                 indicadores: {
                   temperatura: {
@@ -115,13 +123,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                     thresholdMax: false,
                     series: {
                       "name": "Temperatura",
-                      "data": [
-                        /*{x: (new Date()).getTime(), y: 10 },
-                        {x: (new Date()).getTime() + 1000, y: 5 },
-                        {x: (new Date()).getTime() + 2000, y: 22 },
-                        {x: (new Date()).getTime() + 3000, y: 13 },
-                        {x: (new Date()).getTime() + 4000, y: 18 }*/
-                      ]
+                      "data": []
                     }
                   },
                   viento: {
@@ -136,13 +138,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                     thresholdMax: false,
                     series: {
                       "name": "Velocidad del viento",
-                      "data": [
-                        /*{x: (new Date()).getTime(), y: 10 },
-                        {x: (new Date()).getTime() + 1000, y: 5 },
-                        {x: (new Date()).getTime() + 2000, y: 22 },
-                        {x: (new Date()).getTime() + 3000, y: 13 },
-                        {x: (new Date()).getTime() + 4000, y: 18 }*/
-                      ]
+                      "data": []
                     }
                   },
                   humedad: {
@@ -157,18 +153,13 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                     thresholdMax: false,
                     series: {
                       "name": "Humedad",
-                      "data": [
-                        /*{x: (new Date()).getTime(), y: 10 },
-                        {x: (new Date()).getTime() + 1000, y: 5 },
-                        {x: (new Date()).getTime() + 2000, y: 22 },
-                        {x: (new Date()).getTime() + 3000, y: 13 },
-                        {x: (new Date()).getTime() + 4000, y: 18 }*/
-                      ]
+                      "data": []
                     }
                   }
                 },
                 chart: {
                   options: {
+                    useUTC : true,
                     chart: {
                       type: 'spline'
                     },
@@ -219,25 +210,30 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                 },
                 showLastRecords: true
               };
-
+              $scope.config = _config;
+              */
+              $scope.config = MeteoConfig.config();
               $scope.$on('server:data', function(event, message) {
                 if(message.data.temperatura){
                   $scope.config.indicadores.temperatura.thresholdMin = message.data.temperatura.minThresholdAlarm;
                   $scope.config.indicadores.temperatura.thresholdMax = message.data.temperatura.maxThresholdAlarm;
                   $scope.config.indicadores.temperatura.value = message.data.temperatura.value;
-                  $scope.config.indicadores.temperatura.series.data.push({x: (new Date()).getTime(), y: message.data.temperatura.value })
+                  //$scope.config.indicadores.temperatura.series.data.push({x: (new Date()).getTime(), y: message.data.temperatura.value })
+                  $scope.config.indicadores.temperatura.series.data.push({x: Date.now(), y: message.data.temperatura.value })
                 }
                 if(message.data.viento){
                   $scope.config.indicadores.viento.thresholdMin = message.data.viento.minThresholdAlarm;
                   $scope.config.indicadores.viento.thresholdMax = message.data.viento.maxThresholdAlarm;
                   $scope.config.indicadores.viento.value = message.data.viento.value;
-                  $scope.config.indicadores.viento.series.data.push({x: (new Date()).getTime(), y: message.data.viento.value })
+                  //$scope.config.indicadores.viento.series.data.push({x: (new Date()).getTime(), y: message.data.viento.value })
+                  $scope.config.indicadores.viento.series.data.push({x: Date.now(), y: message.data.viento.value })
                 }
                 if(message.data.humedad){
                   $scope.config.indicadores.humedad.thresholdMin = message.data.humedad.minThresholdAlarm;
                   $scope.config.indicadores.humedad.thresholdMax = message.data.humedad.maxThresholdAlarm;
                   $scope.config.indicadores.humedad.value = message.data.humedad.value;
-                  $scope.config.indicadores.humedad.series.data.push({x: (new Date()).getTime(), y: message.data.humedad.value })
+                  //$scope.config.indicadores.humedad.series.data.push({x: (new Date()).getTime(), y: message.data.humedad.value })
+                  $scope.config.indicadores.humedad.series.data.push({x: Date.now(), y: message.data.humedad.value })
                 }
               });
 

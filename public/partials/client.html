@@ -44,7 +44,6 @@
                             }">
                             <img
                                 ng-src="{{ item.icon }}"
-                                ng-click="methods.getData()"
                                 class="md-icon"
                                 style="fill: white;"
                                 ng-class="{
@@ -78,12 +77,16 @@
             <input id="fc_desde" class="cmi-date" type="date"/>
             <span>Hasta</span>
             <input id="fc_hasta" class="cmi-date" type="date"/>
+            <md-button class="md-fab" aria-label="Buscar">
+                <md-icon md-svg-src="./material-design-icons/action/svg/production/ic_search_24px.svg"></md-icon>
+                <md-tooltip>Buscar</md-tooltip>
+            </md-button>
         </div>
         <md-checkbox ng-model="config.showLastRecords" aria-label="Mostrar últimos registros">
             Mostrar últimos registros
         </md-checkbox>
         <md-button class="md-fab" aria-label="Guardar registros">
-            <md-icon md-svg-src="./material-design-icons/content/svg/design/ic_save_24px.svg"></md-icon>
+            <md-icon md-svg-src="./material-design-icons/content/svg/production/ic_save_24px.svg"></md-icon>
             <md-tooltip>Descargar registros</md-tooltip>
         </md-button>
 

@@ -12,6 +12,7 @@ var ServerConfig = function() {
   var self = this,
       config = {
         id: 'configObject',
+        interval: 60000, // un minuto
         estacion: {
           sensores: {
             temperatura: {
@@ -92,15 +93,18 @@ var ServerConfig = function() {
   // guarda la configuracion en Parse
   this.setConfig = function(cfg) {
     config = _.merge(config, cfg);
+    var defer = Q.defer();
     app.find('Config', { objectId: config.objectId }, function (err, response) {
       if(!err) {
         app.update('Config', response.objectId, config, function (err, response) {
           if(!err) {
             console.log('Objeto de configuración actualizado correctamente', response);
+            defer.resolve(response);
           }
         });
       }
     });
+    return defer.promise;
   };
 
   this.set = function(key, value) {
@@ -126,6 +130,7 @@ var ServerConfig = function() {
     /*
     self.setConfig({
       id: 'configObject',
+      interval: 60000,
       estacion: {
         sensores: {
           temperatura: {

@@ -1,3 +1,66 @@
-<div class="cookie-meteo-admin">
+<div class="cookie-meteo-admin"layout="column" layout-fill style="padding-bottom: 32px;margin: 0 10% 0 10%;;">
+    <md-whiteframe class="md-whiteframe-z1" layout="column" layout-fill>
+        <md-list layout-fill>
+            <md-subheader class="md-no-sticky">
+                <md-icon md-svg-src="material-design-icons/social/svg/production/ic_person_24px.svg" class="cmi-name"></md-icon>
+                <span>Usuario</span>
+            </md-subheader>
+            <md-list-item>
+                <md-icon style="padding-left: 20px;" md-svg-icon="material-design-icons/social/svg/production/ic_notifications_24px.svg" class="cmi-name"></md-icon>
+                <p> Enviar mail con alarmas </p>
+                <md-checkbox class="md-secondary" ng-model="topping.wanted"></md-checkbox>
+            </md-list-item>
+            <md-list-item layout-padding>
+                <md-icon style="padding-left: 20px;" md-svg-icon="material-design-icons/content/svg/production/ic_mail_24px.svg" class="cmi-name"></md-icon>
+                <p> Mail </p>
+                <input class="cmi-input-mail" type="text" ng-model="item.mail"/>
+            </md-list-item>
+            <md-divider></md-divider>
+            <md-subheader class="md-no-sticky">Sensores</md-subheader>
+            <!--<md-divider></md-divider>-->
+            <md-list ng-repeat="item in config.indicadores track by item.id">
+                <md-list-item >
+                    <md-icon class="cmi-icon-mini" md-svg-icon="{{item.icon_black}}"></md-icon>
+                    <p> {{ item.description }} </p>
+                    <md-switch class="md-secondary" ng-model="item.visible"></md-switch>
+                </md-list-item>
+                <div ng-if="item.visible">
+                    <md-list-item >
+                        <div class="md-no-style md-list-item-inner">
+                            <md-icon style="padding-left: 20px;" md-svg-icon="material-design-icons/image/svg/production/ic_tune_24px.svg" class="cmi-name"></md-icon>
+                            <p> Ecuación de transferencia: </p>
+                            <input class="cmi-input-transfer" type="number" ng-model="item.transfer.a"/>
+                            <span class="cmi-text-transfer">x^2 +</span>
+                            <input class="cmi-input-transfer" type="number" ng-model="item.transfer.b"/>
+                            <span class="cmi-text-transfer">x +</span>
+                            <input class="cmi-input-transfer" type="number" ng-model="item.transfer.c"/>
+                        </div>
+                    </md-list-item>
+                    <md-list-item >
+                        <div class="md-no-style md-list-item-inner">
+                            <md-icon md-svg-icon="img/climacons/SVG/Degrees-Celcius.svg" class="cmi-icon-mini cmi-icon-sub"></md-icon>
+                            <p> Unidad: </p>
+                            <input type="text" class="cmi-text-units" ng-model="item.units"/>
+                        </div>
+                    </md-list-item>
+                    <md-list-item >
+                        <div class="md-no-style md-list-item-inner">
+                            <md-icon md-svg-icon="material-design-icons/editor/svg/production/ic_vertical_align_top_24px.svg" class="cmi-icon-mini-mini cmi-icon-sub"></md-icon>
+                            <p style="padding-left: 12px;"> Umbral superior: </p>
+                            <input type="text" class="cmi-text-units" ng-model="item.units"/>
+                        </div>
+                    </md-list-item>
+                    <md-list-item >
+                        <div class="md-no-style md-list-item-inner">
+                            <md-icon md-svg-icon="material-design-icons/editor/svg/production/ic_vertical_align_bottom_24px.svg" class="cmi-icon-mini-mini cmi-icon-sub"></md-icon>
+                            <p style="padding-left: 12px;"> Umbral inferior: </p>
+                            <input type="text" class="cmi-text-units" ng-model="item.units"/>
+                        </div>
+                    </md-list-item>
+                    <md-divider></md-divider>
+                </div>
+            </md-list>
+        </md-list>
+    </md-whiteframe>
 
 </div>

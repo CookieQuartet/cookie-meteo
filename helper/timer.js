@@ -9,16 +9,20 @@ function Timer(interval, callback, context) {
       _callback.call(context);
     }, _interval);
     _running = true;
+    return this;
   };
   this.setInterval = function(interval) {
     _interval = interval;
+    return this;
   };
   this.setCallback = function(callback) {
     _callback = callback;
+    return this;
   };
   this.stop = function() {
     clearInterval(_id);
     _running = false;
+    return this;
   };
   this.running = function() {
     return _running;
