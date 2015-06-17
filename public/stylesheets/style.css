@@ -1,6 +1,7 @@
-.toolbardemoBasicUsage md-toolbar md-icon.md-default-theme {
-  color: white;
+html {
+  font-family: 'Roboto', sans-serif;
 }
+
 
 .material-icons {
   font-family: 'Material Icons';
@@ -52,19 +53,31 @@
 .cmi-temperatura:hover,
 .cmi-temperatura.selected,
 .cmi-icon-temperatura {
-  background-color: #009688 !important;
+  background-color: rgba(0, 150, 136, 1) !important;
+}
+
+.cmi-temperatura-settings {
+  background-color: rgba(0, 150, 136, 0.3) !important;
 }
 
 .cmi-viento:hover,
 .cmi-viento.selected,
 .cmi-icon-viento {
-  background-color: #3949ab !important;
+  background-color: rgba(57, 73, 171, 1) !important;
+}
+
+.cmi-viento-settings {
+  background-color: rgba(57, 73, 171, 0.3) !important;
 }
 
 .cmi-humedad:hover,
 .cmi-humedad.selected,
 .cmi-icon-humedad {
-  background-color: #9c27b0 !important;
+  background-color: rgba(156, 39, 176, 1) !important;
+}
+
+.cmi-humedad-settings {
+  background-color: rgba(156, 39, 176, 0.3) !important;
 }
 
 .cmi-icon-temperatura {
@@ -166,11 +179,17 @@
   margin-bottom: 4px;
 }
 
-.cmi-text-units,
+
+.cmi-input-threshold,
 .cmi-input-transfer,
 .cmi-input-sample {
+  text-align: right;
+  width:80px;
+}
+
+.cmi-text-units {
   text-align: center;
-  width:50px;
+  width:80px;
 }
 
 .cmi-input-sample {
@@ -183,13 +202,13 @@
 }
 
 .cookie-meteo-admin {
-  max-width: 800px;
-  margin: 16px;
+  /*max-width: 800px;*/
+  /* margin: 16px;*/
   box-sizing: border-box;
 }
 
 .cmi-input-mail {
-  width:400px;
+  width:40%;
 }
 
 .cookie-meteo-admin .md-subheader {

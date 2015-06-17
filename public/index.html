@@ -4,16 +4,17 @@
         <title>CookieMeteo</title>
         <link rel="stylesheet" href="/stylesheets/style.css">
         <link rel="stylesheet" href="/angular-material/angular-material.css">
+        <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,500' rel='stylesheet' type='text/css'>
         <!--<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">-->
         <script src="/lodash/lodash.js"></script>
         <script src="/angular/angular.js"></script>
         <script src="/angular-material/angular-material.js"></script>
     </head>
     <body ng-controller="MainController" >
-        <md-toolbar>
+        <md-toolbar md-scroll-shrink>
             <div class="md-toolbar-tools">
-                <h2>
-                    <a ui-sref="client"><span>CookieMeteo</span></a>
+                <h2 ng-cloak>
+                    <a ui-sref="client"><span>CookieMeteo - {{ $state.current.name }}</span></a>
                 </h2>
                 <span flex=""></span>
                 <md-button
@@ -40,7 +41,7 @@
                     <md-icon md-svg-icon="./material-design-icons/action/svg/production/ic_settings_48px.svg" style="color: white;"></md-icon>
                     <md-tooltip>Administración</md-tooltip>
                 </md-button>
-                <md-button ng-if="!config.sessionToken" class="md-icon-button" aria-label="Login" ui-sref="login">
+                <md-button ng-if="!config.sessionToken && $state.current.name !== 'login'" class="md-icon-button" aria-label="Login" ui-sref="login">
                     <md-icon md-svg-icon="./material-design-icons/social/svg/production/ic_person_48px.svg" style="color: white;"></md-icon>
                     <md-tooltip>Iniciar sesión</md-tooltip>
                 </md-button>
@@ -50,9 +51,9 @@
                 </md-button>
             </div>
         </md-toolbar>
-        <section layout="row" layout-fill flex class="toolbardemoBasicUsage" >
+        <section layout="row" layout-fill flex>
             <md-content flex layout-padding>
-                <div ui-view></div>
+                <div ui-view style="height:600px;"></div>
             </md-content>
         </section>
     </body>

@@ -6,6 +6,7 @@ angular.module('CookieMeteoServices', [])
           },
           exportConfig = {
             selected: null,
+            alarmsOn: false,
             indicadores: {
               temperatura: {
                 id: 'temperatura',
@@ -15,6 +16,7 @@ angular.module('CookieMeteoServices', [])
                 icon: 'img/climacons/svg/Thermometer-50-white.svg',
                 icon_black: 'img/climacons/svg/Thermometer-50.svg',
                 visible: true,
+                alarmIncluded: true,
                 selected: false,
                 thresholdMin: false,
                 thresholdMax: false,
@@ -31,6 +33,7 @@ angular.module('CookieMeteoServices', [])
                 icon: 'img/climacons/svg/Wind-white.svg',
                 icon_black: 'img/climacons/svg/Wind.svg',
                 visible: true,
+                alarmIncluded: true,
                 selected: false,
                 thresholdMin: false,
                 thresholdMax: false,
@@ -47,6 +50,7 @@ angular.module('CookieMeteoServices', [])
                 icon: 'img/climacons/svg/Cloud-Drizzle-Alt-white.svg',
                 icon_black: 'img/climacons/svg/Cloud-Drizzle-Alt.svg',
                 visible: true,
+                alarmIncluded: true,
                 selected: false,
                 thresholdMin: false,
                 thresholdMax: false,
@@ -105,7 +109,8 @@ angular.module('CookieMeteoServices', [])
                 }]
               }
             },
-            showLastRecords: true
+            realtime: true,
+            serverConfig: null
           },
           defer = $q.defer(),
           loginDefer,
@@ -154,8 +159,8 @@ angular.module('CookieMeteoServices', [])
       // el servidor envia la configuracion base
       $socket.on('server:set_config', function (data) {
         if(typeof data !== 'undefined') {
-          config.server = data;
-          defer.resolve(true);
+          exportConfig.serverConfig = data;
+          defer.resolve(exportConfig);
         } else  {
           defer.resolve(false);
         }

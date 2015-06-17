@@ -33,6 +33,9 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                     logout: function() {
                       MeteoConfig.logout();
                       $state.go('client');
+                    },
+                    updateSampleTime: function() {
+
                     }
                   }
                 }
@@ -134,7 +137,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                   $scope.config.indicadores.humedad.series.data.push({x: (new Date(message.data.createdAt)).getTime(), y: message.data.humedad.value })
                 }
               });
-              $scope.$watch('config.showLastRecords', function(newValue, oldValue) {
+              $scope.$watch('config.realtime', function(newValue, oldValue) {
                 if(newValue && $scope.config.selected) {
                   $scope.config.chart.series.length = 0;
                   $scope.config.chart.title.text = $scope.config.selected.description;

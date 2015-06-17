@@ -44,7 +44,9 @@ function SerialDispatcher(serverConfig) {
     // seleccion de puertos, siempre selecciona todos
     _self._serialPort = new SerialPortFactory();
     _self._serialPort.open(function (error) {
-      _self._serialPort.write('SCAN02' + "\n");
+        if(!error) {
+            _self._serialPort.write('SCAN02' + "\n");
+        }
     });
     _self._serialPort.on('data', function(data) {
 

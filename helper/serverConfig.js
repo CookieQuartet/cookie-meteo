@@ -11,7 +11,8 @@ var ServerConfig = function() {
   var self = this,
       config = {
         id: 'configObject',
-        interval: 60000, // un minuto
+        interval: 60, // un minuto
+        mailAlarm: 'mmaestri@gmail.com',
         estacion: {
           sensores: {
             temperatura: {
@@ -129,7 +130,8 @@ var ServerConfig = function() {
     /*
     self.setConfig({
       id: 'configObject',
-      interval: 60000,
+      interval: 60,
+      mailAlarm: 'mmaestri@gmail.com',
       estacion: {
         sensores: {
           temperatura: {

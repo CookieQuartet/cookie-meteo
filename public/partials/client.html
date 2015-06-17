@@ -14,7 +14,7 @@
         <div
             ng-repeat="item in config.indicadores track by item.id"
             class="cookie-meteo-indicador cookie-meteo-block"
-            flex
+            flex="33"
             flex-order="{{ $index+1 }}"
             ng-class="{
                 'selected': item.selected,
@@ -29,12 +29,13 @@
                     'cmi-alarm-high': item.thresholdMax
                 }">
                 <md-card-content
+                    layout-align="center center"
                     layout="row"
                     layout-md="row"
                     layout-margin
                     layout-fill
                     layout-padding>
-                    <div flex="40" layout="row" layout-align="center center" >
+                    <div flex="30" layout="row" layout-align="center center" >
                         <div
                             class="md-button md-fab cmi-icon"
                             ng-class="{
@@ -54,7 +55,7 @@
                                 flex/>
                         </div>
                     </div>
-                    <div class="md-list-item-text" flex="50" layout="row" layout-md="column" layout-align="center center">
+                    <div class="md-list-item-text" flex="40" layout="row" layout-md="column" layout-align="center center">
                         <div class="md-2-line" layout-md="column">
                             <h4 class="cmi-text-align">{{ item.description }}</h4>
                             <div flex layout="row" layout-align="center center">
@@ -71,24 +72,31 @@
         layout="row"
         layout-sm="column"
         layout-align="end center"
+        style="min-height:70px;"
         ng-if="config.selected">
-        <div class="cmi-show-history" ng-if="!config.showLastRecords">
-            <span>Desde</span>
-            <input id="fc_desde" class="cmi-date" type="date" ng-model="filter.desde"/>
-            <span>Hasta</span>
-            <input id="fc_hasta" class="cmi-date" type="date" ng-model="filter.hasta"/>
-            <md-button class="md-fab" aria-label="Buscar" ng-click="methods.searchWithFilter()">
-                <md-icon md-svg-src="./material-design-icons/action/svg/production/ic_search_24px.svg"></md-icon>
-                <md-tooltip>Buscar</md-tooltip>
-            </md-button>
+        <!--<div flex="33">
+            <md-checkbox ng-model="config.realtime" aria-label="Tiempo real">Tiempo real</md-checkbox>
+        </div>-->
+
+        <div
+            flex
+            class="cmi-show-history"
+            ng-if="!config.realtime"
+            layout="row"
+            layout-sm="row"
+            layout-align="center center"
+            layout-fill>
+            <div layout="row" layout-sm="column" layout-align="center center" layout-padding>
+                <div flex style="width:230px;">
+                    <div style="float:left; width:20px; padding:4px 0;">De</div>
+                    <input id="fc_desde" class="cmi-date" type="date" ng-model="filter.desde"/>
+                </div>
+                <div flex style="width:230px;">
+                    <div style="float:left; width:20px; padding:4px 0;">A</div>
+                    <input id="fc_hasta" class="cmi-date" type="date" ng-model="filter.hasta"/>
+                </div>
+            </div>
         </div>
-        <md-checkbox ng-model="config.showLastRecords" aria-label="Mostrar últimos registros">
-            Mostrar últimos registros
-        </md-checkbox>
-        <md-button class="md-fab" aria-label="Guardar registros">
-            <md-icon md-svg-src="./material-design-icons/content/svg/production/ic_save_24px.svg"></md-icon>
-            <md-tooltip>Descargar registros</md-tooltip>
-        </md-button>
 
     </section>
     <div
@@ -102,5 +110,23 @@
             }"
         flex>
         <highchart id="chart1" config="config.chart"></highchart>
+        <md-content layout="row">
+            <span flex></span>
+        </md-content>
+    </div>
+    <div layout-fill layout="row" ng-if="config.selected">
+        <div flex>
+            <md-checkbox ng-model="config.realtime" aria-label="Tiempo real">Tiempo real</md-checkbox>
+        </div>
+        <div flex=""></div>
+        <md-button  ng-if="!config.realtime" hide-sm class="md-fab" aria-label="Buscar" ng-click="methods.searchWithFilter()">
+            <md-icon md-svg-src="./material-design-icons/action/svg/production/ic_search_24px.svg"></md-icon>
+            <md-tooltip>Buscar</md-tooltip>
+        </md-button>
+
+        <md-button ng-if="!config.realtime" show-sm class="md-fab" aria-label="Guardar registros">
+            <md-icon md-svg-src="./material-design-icons/file/svg/production/ic_file_download_24px.svg"></md-icon>
+            <md-tooltip>Descargar registros</md-tooltip>
+        </md-button>
     </div>
 </section>

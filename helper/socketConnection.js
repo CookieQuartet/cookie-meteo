@@ -15,8 +15,8 @@ function SocketConnection(io){
 
   var serverConfig = new ServerConfig();
   var sDispatcher = new SerialDispatcher(serverConfig);
-  //var timer = new Timer(serverConfig.config().interval, function() {
-  var timer = new Timer(30000, function() {
+  var timer = new Timer(serverConfig.config().interval * 1000, function() {
+  //var timer = new Timer(30000, function() {
     sDispatcher.addRequest(null, { command: 'RDAS' });
     sDispatcher.wakeUp();
   });
