@@ -1,8 +1,7 @@
 <div class="cookie-meteo-admin"layout="column" layout-fill style="padding-bottom: 32px;margin: 0 10% 0 10%;;">
-    <md-whiteframe class="md-whiteframe-z1" layout="column" layout-fill>
+    <md-whiteframe ng-if="isAdmin" class="md-whiteframe-z1" layout="column" layout-fill>
         <md-list layout-fill>
             <md-subheader class="md-no-sticky">
-                <md-icon md-svg-src="material-design-icons/social/svg/production/ic_person_24px.svg" class="cmi-name"></md-icon>
                 <span>Usuario</span>
             </md-subheader>
             <md-list-item>
@@ -15,9 +14,18 @@
                 <p> Mail </p>
                 <input class="cmi-input-mail" type="text" ng-model="item.mail"/>
             </md-list-item>
-            <md-divider></md-divider>
-            <md-subheader class="md-no-sticky">Sensores</md-subheader>
             <!--<md-divider></md-divider>-->
+            <md-subheader class="md-no-sticky">
+                <span>Sensores</span>
+            </md-subheader>
+            <!--<md-divider></md-divider>-->
+            <md-list-item>
+                <md-icon style="padding-left: 20px;" md-svg-icon="material-design-icons/content/svg/production/ic_mail_24px.svg" class="cmi-name"></md-icon>
+                <p> Tiempo entre muestras </p>
+                <input class="cmi-input-sample" type="number" ng-model="item.transfer.c"/>
+                <span>segundos</span>
+            </md-list-item>
+            <md-divider></md-divider>
             <md-list ng-repeat="item in config.indicadores track by item.id">
                 <md-list-item >
                     <md-icon class="cmi-icon-mini" md-svg-icon="{{item.icon_black}}"></md-icon>
@@ -57,8 +65,8 @@
                             <input type="text" class="cmi-text-units" ng-model="item.units"/>
                         </div>
                     </md-list-item>
-                    <md-divider></md-divider>
                 </div>
+                <md-divider></md-divider>
             </md-list>
         </md-list>
     </md-whiteframe>

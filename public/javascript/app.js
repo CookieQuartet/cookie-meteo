@@ -26,15 +26,17 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
               checkLogged($scope, MeteoConfig, function(userData) {
                 if(!userData || userData.username !== 'admin') {
                   $state.go('client');
+                } else {
+                  $scope.isAdmin = true;
+                  $scope.config = MeteoConfig.config();
+                  $scope.methods = {
+                    logout: function() {
+                      MeteoConfig.logout();
+                      $state.go('client');
+                    }
+                  }
                 }
               });
-              $scope.config = MeteoConfig.config();
-              $scope.methods = {
-                logout: function() {
-                  MeteoConfig.logout();
-                  $state.go('client');
-                }
-              }
             }
           })
           .state('login', {
@@ -106,137 +108,41 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
             url: "/",
             templateUrl: "partials/client.html",
             controller: function($scope, MeteoConfig) {
-              /*
-              var _config = MeteoConfig.config();
-              _config = {
-                selected: null,
-                indicadores: {
-                  temperatura: {
-                    id: 'temperatura',
-                    description: 'Temperatura',
-                    units: 'ºC',
-                    value: 0,
-                    icon: 'img/climacons/svg/Thermometer-50-white.svg',
-                    visible: true,
-                    selected: false,
-                    thresholdMin: false,
-                    thresholdMax: false,
-                    series: {
-                      "name": "Temperatura",
-                      "data": []
-                    }
-                  },
-                  viento: {
-                    id: 'viento',
-                    description: 'Velocidad del viento',
-                    units: 'km/h',
-                    value: 0,
-                    icon: 'img/climacons/svg/Wind-white.svg',
-                    visible: true,
-                    selected: false,
-                    thresholdMin: false,
-                    thresholdMax: false,
-                    series: {
-                      "name": "Velocidad del viento",
-                      "data": []
-                    }
-                  },
-                  humedad: {
-                    id: 'humedad',
-                    description: 'Humedad',
-                    units: '%',
-                    value: 0,
-                    icon: 'img/climacons/svg/Cloud-Drizzle-Alt-white.svg',
-                    visible: true,
-                    selected: false,
-                    thresholdMin: false,
-                    thresholdMax: false,
-                    series: {
-                      "name": "Humedad",
-                      "data": []
-                    }
-                  }
-                },
-                chart: {
-                  options: {
-                    useUTC : true,
-                    chart: {
-                      type: 'spline'
-                    },
-                    animation: Highcharts.svg,
-                    plotOptions: {
-                      series: {
-                        stacking: ''
-                      }
-                    },
-                    tooltip: {
-                      formatter: function () {
-                        return '<b>' + this.series.name + '</b><br/>' +
-                            Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
-                            Highcharts.numberFormat(this.y, 2);
-                      }
-                    },
-                    events: {
-                      load: function () {
-                        var series = this.series[0];
-                        setInterval(function () {
-                          var x = (new Date()).getTime(), // current time
-                              y = Math.random();
-                          series.addPoint([x, y], true, true);
-                        }, 1000);
-                      }
-                    }
-                  },
-                  series: [],
-                  title: {
-                    text: 'Datos históricos'
-                  },
-                  loading: false,
-                  size: {},
-                  xAxis: {
-                    type: 'datetime',
-                    tickPixelInterval: 150
-                  },
-                  yAxis: {
-                    title: {
-                      text: 'Valor'
-                    },
-                    plotLines: [{
-                      value: 0,
-                      width: 1,
-                      color: '#808080'
-                    }]
-                  }
-                },
-                showLastRecords: true
-              };
-              $scope.config = _config;
-              */
               $scope.config = MeteoConfig.config();
+              $scope.filter = {
+                desde: new Date(),
+                hasta: new Date(),
+                data: null
+              };
               $scope.$on('server:data', function(event, message) {
                 if(message.data.temperatura){
                   $scope.config.indicadores.temperatura.thresholdMin = message.data.temperatura.minThresholdAlarm;
                   $scope.config.indicadores.temperatura.thresholdMax = message.data.temperatura.maxThresholdAlarm;
                   $scope.config.indicadores.temperatura.value = message.data.temperatura.value;
-                  //$scope.config.indicadores.temperatura.series.data.push({x: (new Date()).getTime(), y: message.data.temperatura.value })
-                  $scope.config.indicadores.temperatura.series.data.push({x: Date.now(), y: message.data.temperatura.value })
+                  $scope.config.indicadores.temperatura.series.data.push({x: (new Date(message.data.createdAt)).getTime(), y: message.data.temperatura.value })
                 }
                 if(message.data.viento){
                   $scope.config.indicadores.viento.thresholdMin = message.data.viento.minThresholdAlarm;
                   $scope.config.indicadores.viento.thresholdMax = message.data.viento.maxThresholdAlarm;
                   $scope.config.indicadores.viento.value = message.data.viento.value;
-                  //$scope.config.indicadores.viento.series.data.push({x: (new Date()).getTime(), y: message.data.viento.value })
-                  $scope.config.indicadores.viento.series.data.push({x: Date.now(), y: message.data.viento.value })
+                  $scope.config.indicadores.viento.series.data.push({x: (new Date(message.data.createdAt)).getTime(), y: message.data.viento.value })
                 }
                 if(message.data.humedad){
                   $scope.config.indicadores.humedad.thresholdMin = message.data.humedad.minThresholdAlarm;
                   $scope.config.indicadores.humedad.thresholdMax = message.data.humedad.maxThresholdAlarm;
                   $scope.config.indicadores.humedad.value = message.data.humedad.value;
-                  //$scope.config.indicadores.humedad.series.data.push({x: (new Date()).getTime(), y: message.data.humedad.value })
-                  $scope.config.indicadores.humedad.series.data.push({x: Date.now(), y: message.data.humedad.value })
+                  $scope.config.indicadores.humedad.series.data.push({x: (new Date(message.data.createdAt)).getTime(), y: message.data.humedad.value })
                 }
               });
-
+              $scope.$watch('config.showLastRecords', function(newValue, oldValue) {
+                if(newValue && $scope.config.selected) {
+                  $scope.config.chart.series.length = 0;
+                  $scope.config.chart.title.text = $scope.config.selected.description;
+                  $scope.config.chart.series.push($scope.config.selected.series);
+                } else {
+                  $scope.methods.searchWithFilter();
+                }
+              });
               $scope.methods = {
                 select: function(indicador) {
                   _.each($scope.config.indicadores, function(item) {
@@ -245,7 +151,38 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                   indicador.selected = true;
                   $scope.config.selected = indicador;
                   $scope.config.chart.series.length = 0;
+                  $scope.config.chart.title.text = indicador.description;
                   $scope.config.chart.series.push(indicador.series);
+                },
+                searchWithFilter: function() {
+                  var Sensores = Parse.Object.extend("Sensores");
+                  var query = new Parse.Query(Sensores);
+                  query.greaterThanOrEqualTo("createdAt", $scope.filter.desde.clearTime());
+                  query.lessThanOrEqualTo("createdAt", $scope.filter.hasta.clearTime());
+                  query.find({
+                    success: function(muestras) {
+                      var data = {
+                            temperatura: { name: $scope.config.indicadores.temperatura.description, data: [] },
+                            viento: { name: $scope.config.indicadores.viento.description, data: [] },
+                            humedad: { name: $scope.config.indicadores.humedad.description, data: [] }
+                          };
+                      _.each(muestras, function(muestra) {
+                        data.temperatura.data.push({ x: (new Date(muestra.createdAt)).getTime(), y: muestra.attributes.temperatura });
+                        data.viento.data.push({ x: (new Date(muestra.createdAt)).getTime(), y: muestra.attributes.viento });
+                        data.humedad.data.push({ x: (new Date(muestra.createdAt)).getTime(), y: muestra.attributes.humedad });
+                      });
+                      $scope.filter.data = data;
+
+                      $scope.config.chart.series.length = 0;
+                      if($scope.config.selected) {
+                        $scope.config.chart.title.text = $scope.config.selected.description;
+                        $scope.config.chart.series.push(data[$scope.config.selected.id]);
+                      }
+                    },
+                    error: function(error) {
+                      alert("Error: " + error.code + " " + error.message);
+                    }
+                  });
                 },
                 getData: function() {
                   MeteoConfig.request();

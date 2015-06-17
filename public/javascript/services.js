@@ -58,7 +58,6 @@ angular.module('CookieMeteoServices', [])
             },
             chart: {
               options: {
-                useUTC : true,
                 chart: {
                   type: 'spline'
                 },
@@ -76,14 +75,7 @@ angular.module('CookieMeteoServices', [])
                   }
                 },
                 events: {
-                  load: function () {
-                    var series = this.series[0];
-                    setInterval(function () {
-                      var x = (new Date()).getTime(), // current time
-                          y = Math.random();
-                      series.addPoint([x, y], true, true);
-                    }, 1000);
-                  }
+
                 }
               },
               series: [],
@@ -99,6 +91,12 @@ angular.module('CookieMeteoServices', [])
               yAxis: {
                 title: {
                   text: 'Valor'
+                },
+                labels: {
+                  //format: '{value}',
+                  formatter: function () {
+                    return this.value.toFixed(2).toString();
+                  }
                 },
                 plotLines: [{
                   value: 0,
@@ -142,6 +140,7 @@ angular.module('CookieMeteoServices', [])
             },
             startAcq: function(status) {
               $socket.emit('client:startAcq');
+              $socket.emit('client:request', { command: 'RDAS' });
             },
             stopAcq: function(status) {
               $socket.emit('client:stopAcq');
@@ -185,7 +184,7 @@ angular.module('CookieMeteoServices', [])
       // solicitar la configuracion base
       $socket.emit('client:get_config');
       // solicitar el estado de la adquisicion
-      $socket.emit('client:get_acq:status');
-      //$socket.emit('client:request', { command: 'RDAS' });
+      $socket.emit('client:get_acq_status');
+      $socket.emit('client:request', { command: 'RDAS' });
       return service;
   });

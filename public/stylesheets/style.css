@@ -134,6 +134,7 @@
 
 .cmi-date {
   margin:0 10px 0 10px;
+  width: 140px;
 }
 
 .cmi-show-history {
@@ -166,9 +167,14 @@
 }
 
 .cmi-text-units,
-.cmi-input-transfer {
+.cmi-input-transfer,
+.cmi-input-sample {
   text-align: center;
   width:50px;
+}
+
+.cmi-input-sample {
+  margin-right:10px;
 }
 
 .cmi-text-transfer {

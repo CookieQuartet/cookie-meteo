@@ -1,3 +1,12 @@
+var Parse = require('./parse');
+var _ = require('lodash');
+var Q = require('q');
+
+var app = new Parse({
+  app_id:"iHBoW7NiugHfz1TBYimBbCuVgaNLiu2ojq8uqIBH",
+  api_key: "utg0CdEubwtz0m2meWqPRnh1nOnyMBFVMGG3aoNN"
+});
+
 function SocketConnection(io){
   //var serialPort = require('./serialPort');
   var SerialDispatcher = require('./serialDispatcher');
@@ -7,9 +16,17 @@ function SocketConnection(io){
   var serverConfig = new ServerConfig();
   var sDispatcher = new SerialDispatcher(serverConfig);
   //var timer = new Timer(serverConfig.config().interval, function() {
-  var timer = new Timer(1000, function() {
+  var timer = new Timer(30000, function() {
     sDispatcher.addRequest(null, { command: 'RDAS' });
     sDispatcher.wakeUp();
+  });
+  // callback para guardar en Parse la adquisicion de datos
+  sDispatcher.setCallback(function(data) {
+    var defer = Q.defer();
+    app.insert('Sensores', data, function(err, response) {
+      defer.resolve(response);
+    });
+    return defer.promise;
   });
 
   io.on('connection', function (socket) {

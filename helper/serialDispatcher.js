@@ -3,7 +3,8 @@ var SerialPortFactory = require('./serialPortFactory');
 var transformData = require('./transformData');
 
 function SerialDispatcher(serverConfig) {
-  var _self = this;
+  var _self = this,
+      _callback = function() {};
   this._serialPort = null;
   function ConnHandler() {
       this.sockets = {};
@@ -46,14 +47,23 @@ function SerialDispatcher(serverConfig) {
       _self._serialPort.write('SCAN02' + "\n");
     });
     _self._serialPort.on('data', function(data) {
+
       if(data.indexOf(';') >= 0) {
         // son datos para enviar a los clientes
-        _self.connHandler.broadcast({
-          type: 'server:data',
-          data: {
-            message: 'Datos obtenidos',
-            data: processData(data)
-          }
+        var _data = processData(data);
+        // exportar la respuesta
+        _callback({
+          humedad: _data.humedad.value,
+          viento: _data.viento.value,
+          temperatura: _data.temperatura.value
+        }).then(function(response) {
+          _self.connHandler.broadcast({
+            type: 'server:data',
+            data: {
+              message: 'Datos obtenidos',
+              data: _.extend(_data, response)
+            }
+          });
         });
       } else {
         // son la respuesta de un comando
@@ -68,6 +78,14 @@ function SerialDispatcher(serverConfig) {
   }
   this.connHandler = new ConnHandler();
   this.requests = [];
+  this.setCallback = function(callback) {
+    if(typeof callback === 'function') {
+      _callback = callback;
+    } else {
+      console.log(callback, ' no es una funcion valida');
+      _callback = function() {};
+    }
+  };
   this.addRequest = function(socket, request) {
     _self.requests.push({socket: socket, request: request });
   };

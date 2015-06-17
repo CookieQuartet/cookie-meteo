@@ -74,10 +74,10 @@
         ng-if="config.selected">
         <div class="cmi-show-history" ng-if="!config.showLastRecords">
             <span>Desde</span>
-            <input id="fc_desde" class="cmi-date" type="date"/>
+            <input id="fc_desde" class="cmi-date" type="date" ng-model="filter.desde"/>
             <span>Hasta</span>
-            <input id="fc_hasta" class="cmi-date" type="date"/>
-            <md-button class="md-fab" aria-label="Buscar">
+            <input id="fc_hasta" class="cmi-date" type="date" ng-model="filter.hasta"/>
+            <md-button class="md-fab" aria-label="Buscar" ng-click="methods.searchWithFilter()">
                 <md-icon md-svg-src="./material-design-icons/action/svg/production/ic_search_24px.svg"></md-icon>
                 <md-tooltip>Buscar</md-tooltip>
             </md-button>
