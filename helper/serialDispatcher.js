@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var Q = require('q');
 var SerialPortFactory = require('./serialPortFactory');
 var transformData = require('./transformData');
 
@@ -27,14 +28,12 @@ function SerialDispatcher(serverConfig) {
       }
   }
   function processData(data) {
-    var _values = data.replace(/\r/g, ''),
-        values = _.chain(_values.split(';'))
+    var values = _.chain(data.replace(/\r/g, '').split(';'))
           .remove(function (item) { return item.length !== 0; })
           .map(function (item) { return parseInt(item) })
           .value();
     return (function() {
       var response = {},
-          //sensores = _.filter(serverConfig.config().estacion.sensores, { active: true });
           sensores = serverConfig.config().estacion.sensores;
       _.each(sensores, function(sensor) {
         response[sensor.id] = transformData(values[sensor.channel], sensor.transfer, sensor.thresholds)
@@ -43,42 +42,52 @@ function SerialDispatcher(serverConfig) {
     })();
   }
   function init() {
+    var defer = Q.defer();
     // seleccion de puertos, siempre selecciona todos
     _self._serialPort = new SerialPortFactory();
     _self._serialPort.open(function (error) {
-        if(!error) {
-            _self._serialPort.write('SCAN02' + "\n");
-        }
-    });
-    _self._serialPort.on('data', function(data) {
-
-      if(data.indexOf(';') >= 0) {
-        // son datos para enviar a los clientes
-        var _data = processData(data);
-        // exportar la respuesta
-        _callback({
-          humedad: _data.humedad.value,
-          viento: _data.viento.value,
-          temperatura: _data.temperatura.value
-        }).then(function(response) {
-          _self.connHandler.broadcast({
-            type: 'server:data',
-            data: {
-              message: 'Datos obtenidos',
-              data: _.extend(_data, response)
-            }
-          });
+      if(!error) {
+        _self._serialPort.write('SCAN02' + "\n");
+        _self._serialPort.on('data', function(data) {
+          if(data.indexOf(';') >= 0) {
+            // son datos para enviar a los clientes
+            var _data = processData(data);
+            // exportar la respuesta
+            _callback({
+              humedad: _data.humedad.value,
+              viento: _data.viento.value,
+              temperatura: _data.temperatura.value
+            }).then(function(response) {
+              _self.connHandler.broadcast({
+                type: 'server:data',
+                data: {
+                  message: 'Datos obtenidos',
+                  data: _.extend(_data, response)
+                }
+              });
+            });
+          } else {
+            // es la respuesta de un comando
+            _self.connHandler.emit({
+              type: 'server:data',
+              data: {
+                message: data
+              }
+            });
+          }
         });
+        defer.resolve({ status: 'OK', message: 'Interface OK' });
       } else {
-        // es la respuesta de un comando
         _self.connHandler.emit({
           type: 'server:data',
           data: {
-            message: data
+            message: error.message.message
           }
         });
+        defer.resolve({ status: 'ERROR', message: error.message });
       }
     });
+    return defer.promise;
   }
   this.connHandler = new ConnHandler();
   this.requests = [];
@@ -99,28 +108,30 @@ function SerialDispatcher(serverConfig) {
     }
   };
   this.processRequest = function(requestItem) {
-    this._serialPort.open(function (error) {
-          var command = requestItem.request.command,
-              value = requestItem.request.params ? requestItem.request.params: '';
-          if ( error ) {
-              console.log('failed to open: '+ error);
-          } else {
-              _self.connHandler.selectedSocket = requestItem.socket;
-            _self._serialPort.write(command + value + "\n");
-          }
-      });
+    _self._serialPort.open(function (error) {
+      var command = requestItem.request.command,
+          value = requestItem.request.params ? requestItem.request.params: '';
+      if(error) {
+        console.log('failed to open: '+ error);
+      } else {
+        _self.connHandler.selectedSocket = requestItem.socket;
+        _self._serialPort.write(command + value + "\n");
+      }
+    });
   };
   this.processQueue = function() {
-      while(_self.requests.length > 0) {
-          _self.processRequest(_self.requests.pop())
-      }
+    while(_self.requests.length > 0) {
+      _self.processRequest(_self.requests.pop())
+    }
   };
   this.destroy = function() {
-    _self._serialPort.close();
+    if(_self._serialPort.isOpen()) {
+      _self._serialPort.close();
+    }
   };
   this.restart = function() {
     this.destroy();
-    init();
+    return init();
   };
   init();
 }

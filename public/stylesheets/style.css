@@ -220,3 +220,19 @@ html {
   margin: 0 !important;
   background-color: #eeeeee;
 }
+
+.cmi-port-error {
+  font-size: .8em;
+  padding: 5px;
+  background-color: gold;
+  border-radius: 4px;
+  border: 1px solid black;
+}
+
+.cmi-port-ok {
+  font-size: .8em;
+  padding: 5px;
+  background-color: rgb(158, 255, 174);
+  border-radius: 4px;
+  border: 1px solid black;
+}

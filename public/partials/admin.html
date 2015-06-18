@@ -20,7 +20,26 @@
                 <md-list-item style="height: 69px; padding: 0 16px;margin-top: 4px;background-color: aliceblue;">
                     <md-icon style="padding-left: 20px;margin-right: 48px;" md-svg-icon="material-design-icons/hardware/svg/production/ic_memory_24px.svg" class="cmi-name"></md-icon>
                     <p> Reporte de estado de la estación metereológica </p>
-                    <p style="margin-left:10px;float: right;text-align: right;"> OK: {{ config.report | date:'dd/MM/yyyy HH:mm:ss' || 'NO'}} </p>
+                    <p style="margin-left:10px;float: right;text-align: right;"> {{ config.report | date:'dd/MM/yyyy HH:mm:ss' || 'NO'}} </p>
+                    <md-button class="md-fab md-mini md-primary" aria-label="Guardar cambios" ng-click="methods.updateSensor(item)">
+                        <md-icon md-svg-src="./material-design-icons/action/svg/production/ic_autorenew_24px.svg"></md-icon>
+                        <md-tooltip>Actualizar estado</md-tooltip>
+                    </md-button>
+                </md-list-item>
+                <md-divider></md-divider>
+                <md-list-item style="height: 69px; padding: 0 16px;margin-top: 4px;background-color: aliceblue;">
+                    <md-icon style="padding-left: 20px;margin-right: 48px;" md-svg-icon="material-design-icons/hardware/svg/production/ic_memory_24px.svg" class="cmi-name"></md-icon>
+                    <p> Estado de la interface RS232 </p>
+                    <div
+                        ng-class="{
+                            'cmi-port-error': config.serialPortStatus.status === 'ERROR',
+                            'cmi-port-ok': config.serialPortStatus.status === 'OK'
+                        }"
+                        style="margin-left:10px;float: right;text-align: right;"> {{ config.serialPortStatus.message }} </div>
+                    <md-button class="md-fab md-mini md-primary" aria-label="Guardar cambios" ng-click="methods.restartSerialPort()">
+                        <md-icon md-svg-src="./material-design-icons/action/svg/production/ic_autorenew_24px.svg"></md-icon>
+                        <md-tooltip>Reiniciar puerto</md-tooltip>
+                    </md-button>
                 </md-list-item>
                 <md-divider></md-divider>
                 <md-subheader class="md-no-sticky">
@@ -157,7 +176,6 @@
                             <p> Incluir en alarmas </p>
                             <md-checkbox class="md-primary" ng-model="config.serverConfig.estacion.sensores[item.id].alarmIncluded"></md-checkbox>
                         </md-list-item>
-                        <!--<md-divider></md-divider>-->
                     </div>
                     <md-divider></md-divider>
                 </md-list>

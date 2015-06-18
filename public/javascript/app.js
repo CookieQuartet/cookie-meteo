@@ -31,6 +31,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                   $scope.config = _.clone(MeteoConfig.config(), true);
                   $scope.config.report = null;
                   $scope.config.selected = null;
+                  $scope.config.serialPortStatus = null;
                   $scope.methods = {
                     logout: function() {
                       MeteoConfig.logout();
@@ -80,11 +81,14 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                           sensores: patch
                         }
                       });
+                    },
+                    restartSerialPort: function() {
+                      MeteoConfig.send('client:restart_port');
                     }
                   };
-                  MeteoConfig.send('client:admin_in');
+                  //MeteoConfig.send('client:admin_in');
                   $scope.$on('destroy', function() {
-                    MeteoConfig.send('client:admin_out');
+                    //MeteoConfig.send('client:admin_out');
                   });
 
                   $scope.$on('server:data', function(event, data) {
@@ -93,6 +97,9 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                       $scope.config.report = Date.now();
                     }
                   });
+                  $scope.$on('restart_port_done', function(event, data) {
+                    $scope.config.serialPortStatus = data;
+                  })
                 }
               });
             }
@@ -101,7 +108,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
             url: "/login",
             templateUrl: "partials/login.html",
             controller: function($scope, $state, MeteoConfig, $mdToast) {
-              MeteoConfig.send('client:admin_out');
+              //MeteoConfig.send('client:admin_out');
               $scope.config = {
                 user: {
                   login: {
@@ -166,8 +173,9 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
             url: "/",
             templateUrl: "partials/client.html",
             controller: function($scope, MeteoConfig) {
-              MeteoConfig.send('client:admin_out');
+              //MeteoConfig.send('client:admin_out');
               $scope.config = MeteoConfig.config();
+              $scope.config.enableDownload = false;
               $scope.filter = {
                 desde: new Date(),
                 hasta: new Date(),
@@ -195,7 +203,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                     }
                     console.log(message);
                   }),
-                $scope.$watch('config.realtime', function(newValue, oldValue) {
+                  $scope.$watch('config.realtime', function(newValue, oldValue) {
                   if(newValue && $scope.config.selected) {
                     $scope.config.chart.series.length = 0;
                     $scope.config.chart.title.text = $scope.config.selected.description;
@@ -203,7 +211,14 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                   } else {
                     $scope.methods.searchWithFilter();
                   }
-                })
+                }),
+                  $scope.$watch('config.chart.series', function() {
+                    if($scope.config.chart.series[0] && $scope.config.chart.series[0].length > 0) {
+                      $scope.config.enableDownload = true;
+                    } else {
+                      $scope.config.enableDownload = false;
+                    }
+                  }, true)
               ];
               $scope.$on('destroy', function() {
                 _.each(listeners, function(listener) {
@@ -259,6 +274,30 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                 logout: function() {
                   MeteoConfig.logout();
                   $state.go('client');
+                },
+                download: function(series) {
+                  var filename = 'registro.csv',
+                      link = document.createElement('a'),
+                      template = 'Sensor;Fecha;Hora;Valor\n' +
+                        '<% _.each(data, function(item) { %>' +
+                          '<%=item.sensor%>;<%=item.fecha%>;<%=item.hora%>;<%=item.valor%><%="|"%>' +
+                        '<% }); %>',
+                      compiled = _.template(template),
+                      result = compiled({ 'data': _.map(series.data, function(item){
+                          return {
+                            sensor: series.name,
+                            fecha: new Date(item.x).toString('yyyy/MM/dd'),
+                            hora: new Date(item.x).toString('HH:mm:ss'),
+                            valor: item.y.toFixed(2)
+                          }
+                        })
+                      }).replace(/\|/g, '\n');
+                  link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(result));
+                  link.setAttribute('download', filename);
+                  link.style.display = 'none';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
                 }
               }
             }

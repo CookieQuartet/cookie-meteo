@@ -14,7 +14,7 @@ function SocketConnection(io){
   var Timer = require('./timer');
 
   // polling para el subsistema de alarmas
-  var polling = 30;
+  //var polling = 30;
   // manager de configuracion
   var serverConfig = new ServerConfig();
   // manager de acceso al puerto serie
@@ -25,10 +25,10 @@ function SocketConnection(io){
     sDispatcher.wakeUp();
   });
   // heartbeat de administracion
-  var idenManager = new Timer(polling, function(socket) {
+  /*var idenManager = new Timer(polling, function(socket) {
     sDispatcher.addRequest(socket, { command: 'IDEN' });
     sDispatcher.wakeUp();
-  });
+  });*/
   // callback/promesa para guardar en Parse la adquisicion de datos
   sDispatcher.setCallback(function(data) {
     var defer = Q.defer();
@@ -43,12 +43,12 @@ function SocketConnection(io){
     sDispatcher.connHandler.addSocket(socket);
 
     // start de adquisicion de datos
-    socket.on('client:startAcq', function(){
+    socket.on('client:start_acq', function(){
       timer.start();
       socket.emit('server:set_acq_status', timer.running());
     });
     // stop de adquisicion de datos
-    socket.on('client:stopAcq', function(){
+    socket.on('client:stop_acq', function(){
       timer.stop();
       socket.emit('server:set_acq_status', timer.running());
     });
@@ -63,6 +63,7 @@ function SocketConnection(io){
           .setInterval(config.interval)
           .stop()
           .start();
+        console.info('El período de muestreo fue cambiado a ', config.interval);
         socket.emit('server:set_config', config);
         socket.emit('server:set_config_done');
       });
@@ -70,6 +71,11 @@ function SocketConnection(io){
     // un cliente quiere ejecutar un comando sobre la placa
     socket.on('client:request', function (request) {
       sDispatcher.addRequest(socket, request);
+      sDispatcher.wakeUp();
+    });
+    // un cliente pide identificacion
+    socket.on('client:iden', function (request) {
+      sDispatcher.addRequest(socket, { command: 'IDEN' });
       sDispatcher.wakeUp();
     });
     // un cliente pide datos
@@ -106,6 +112,13 @@ function SocketConnection(io){
         socket.emit('server:logout', response);
       });
     });
+    // un cliente solicita el reinicio del puerto serie
+    socket.on('client:restart_port', function () {
+      sDispatcher.restart().then(function(data) {
+        socket.emit('server:set_restart_port_done', data);
+      });
+    });
+    /*
     // un admin entra a settings
     socket.on('client:admin_in', function() {
       idenManager.setSocket(socket).start();
@@ -113,7 +126,7 @@ function SocketConnection(io){
     // un admin sale de settings
     socket.on('client:admin_out', function() {
       idenManager.stop().setSocket(null);
-    });
+    });*/
     // un cliente se desconecta
     socket.on('disconnect', function () {
       sDispatcher.connHandler.removeSocket(socket.id);

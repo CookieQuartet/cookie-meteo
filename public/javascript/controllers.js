@@ -33,19 +33,23 @@ angular.module('CookieMeteo')
       $state.go('client');
     });
     // verificacion del estado de la adquisicion
-    $rootScope.$on('acqStatus', function(event, data) {
+    $rootScope.$on('acq_status', function(event, data) {
       $scope.config.acquiring = data.status;
     });
     // iniciar adquisicion
-    $rootScope.$on('startAcq', function(event, data) {
+    $rootScope.$on('start_acq', function(event, data) {
       MeteoConfig.startAcq();
     });
     // detener adquisicion
-    $rootScope.$on('stopAcq', function(event, data) {
+    $rootScope.$on('stop_acq', function(event, data) {
       MeteoConfig.stopAcq();
     });
     // aviso de configuracion modificada
     $rootScope.$on('config_changed', function(event) {
       $scope.methods.toast('La configuración se guardó con éxito!')
+    });
+    // aviso de reinicio de puerto serie
+    $rootScope.$on('restart_port_done', function(event, data) {
+      $scope.methods.toast('Se reinició el puerto')
     })
   });

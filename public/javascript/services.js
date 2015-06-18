@@ -148,11 +148,11 @@ angular.module('CookieMeteoServices', [])
               return loginDefer.promise;
             },
             startAcq: function(status) {
-              $socket.emit('client:startAcq');
+              $socket.emit('client:start_acq');
               $socket.emit('client:request', { command: 'RDAS' });
             },
             stopAcq: function(status) {
-              $socket.emit('client:stopAcq');
+              $socket.emit('client:stop_acq');
             }
           };
       // el cliente recibe datos del servidor
@@ -178,6 +178,9 @@ angular.module('CookieMeteoServices', [])
       $socket.on('server:set_config_done', function() {
         $rootScope.$broadcast('config_changed');
       });
+      $socket.on('server:set_restart_port_done', function(data) {
+        $rootScope.$broadcast('restart_port_done', data);
+      });
       // el servidor responde si hay una sesion activa
       $socket.on('server:checkLogged', function (data) {
         config.user = data;
@@ -197,7 +200,7 @@ angular.module('CookieMeteoServices', [])
       });
       // el servidor informa el estado de la adquisicion
       $socket.on('server:set_acq_status', function(status) {
-        $rootScope.$broadcast('acqStatus', { status: status });
+        $rootScope.$broadcast('acq_status', { status: status });
       });
       // solicitar la configuracion base
       $socket.emit('client:get_config');
