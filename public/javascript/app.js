@@ -37,6 +37,9 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                       MeteoConfig.logout();
                       $state.go('client');
                     },
+                    updateStatus: function() {
+                      MeteoConfig.send('client:iden');
+                    },
                     updateSampleTime: function() {
                       event.preventDefault();
                       event.stopPropagation();

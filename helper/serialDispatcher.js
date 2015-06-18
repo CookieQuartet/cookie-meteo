@@ -81,7 +81,7 @@ function SerialDispatcher(serverConfig) {
         _self.connHandler.emit({
           type: 'server:data',
           data: {
-            message: error.message.message
+            message: error.message
           }
         });
         defer.resolve({ status: 'ERROR', message: error.message });

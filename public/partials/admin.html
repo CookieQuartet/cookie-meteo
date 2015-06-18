@@ -21,7 +21,7 @@
                     <md-icon style="padding-left: 20px;margin-right: 48px;" md-svg-icon="material-design-icons/hardware/svg/production/ic_memory_24px.svg" class="cmi-name"></md-icon>
                     <p> Reporte de estado de la estación metereológica </p>
                     <p style="margin-left:10px;float: right;text-align: right;"> {{ config.report | date:'dd/MM/yyyy HH:mm:ss' || 'NO'}} </p>
-                    <md-button class="md-fab md-mini md-primary" aria-label="Guardar cambios" ng-click="methods.updateSensor(item)">
+                    <md-button class="md-fab md-mini md-primary" aria-label="Actualizar estado" ng-click="methods.updateStatus()">
                         <md-icon md-svg-src="./material-design-icons/action/svg/production/ic_autorenew_24px.svg"></md-icon>
                         <md-tooltip>Actualizar estado</md-tooltip>
                     </md-button>
