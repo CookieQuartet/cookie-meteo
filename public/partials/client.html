@@ -1,5 +1,6 @@
 <section class="cookie-meteo-client" layout-margin>
     <div
+        style="padding-top:0 !important;"
         layout="row"
         layout-md="column"
         layout-align-gt-md="column"
@@ -22,7 +23,7 @@
                 'cmi-viento': item.id === 'viento',
                 'cmi-humedad': item.id === 'humedad'
             }"
-            ng-if="item.visible"
+            ng-if="config.serverConfig.estacion.sensores[item.id].active"
             ng-click="methods.select(item)">
             <md-card ng-class="{
                     'cmi-alarm-low': item.thresholdMin,
@@ -57,10 +58,10 @@
                     </div>
                     <div class="md-list-item-text" flex="40" layout="row" layout-md="column" layout-align="center center">
                         <div class="md-2-line" layout-md="column">
-                            <h4 class="cmi-text-align">{{ item.description }}</h4>
+                            <div class="cmi-text-align">{{ item.description }}</div>
                             <div flex layout="row" layout-align="center center">
                                 <span class="cmi-text">{{ item.value | number:2 }}</span>
-                                <div class="cmi-units">{{ item.units }}</div>
+                                <div class="cmi-units">{{ config.serverConfig.estacion.sensores[item.id].units }}</div>
                             </div>
                         </div>
                     </div>
@@ -68,65 +69,55 @@
             </md-card>
         </div>
     </div>
-    <section
-        layout="row"
-        layout-sm="column"
-        layout-align="end center"
-        style="min-height:70px;"
-        ng-if="config.selected">
-        <!--<div flex="33">
-            <md-checkbox ng-model="config.realtime" aria-label="Tiempo real">Tiempo real</md-checkbox>
-        </div>-->
-
+    <div ng-if="config.selected">
         <div
-            flex
-            class="cmi-show-history"
-            ng-if="!config.realtime"
-            layout="row"
-            layout-sm="row"
-            layout-align="center center"
-            layout-fill>
-            <div layout="row" layout-sm="column" layout-align="center center" layout-padding>
-                <div flex style="width:230px;">
-                    <div style="float:left; width:20px; padding:4px 0;">De</div>
-                    <input id="fc_desde" class="cmi-date" type="date" ng-model="filter.desde"/>
-                </div>
-                <div flex style="width:230px;">
-                    <div style="float:left; width:20px; padding:4px 0;">A</div>
-                    <input id="fc_hasta" class="cmi-date" type="date" ng-model="filter.hasta"/>
+            hide-sm
+            class="cookie-meteo-grafico cookie-meteo-block"
+            ng-class="{
+                'cmi-temperatura selected ': config.indicadores.temperatura.selected,
+                'cmi-viento selected ': config.indicadores.viento.selected,
+                'cmi-humedad selected ': config.indicadores.humedad.selected
+            }"
+            flex>
+            <highchart id="chart1" config="config.chart"></highchart>
+            <md-content layout="row">
+                <span flex></span>
+            </md-content>
+        </div>
+        <div layout-fill layout="row">
+            <div flex>
+                <md-checkbox class="md-primary" ng-model="config.realtime" aria-label="Tiempo real">Tiempo real</md-checkbox>
+            </div>
+            <div
+                flex
+                ng-if="!config.realtime"
+                layout="row"
+                layout-sm="row"
+                layout-align="start center"
+                layout-fill>
+                <div layout="row" layout-sm="column" layout-align="center center" layout-padding>
+                    <div flex layout="row">
+                        <label style="padding:4px 0;" for="fc_desde">Desde</label>
+                        <input id="fc_desde" class="cmi-date" type="datetime-local" ng-model="filter.desde"/>
+                    </div>
+                    <div flex layout="row">
+                        <label style="padding:4px 0;" for="fc_hasta">Hasta</label>
+                        <input id="fc_hasta" class="cmi-date" type="datetime-local" ng-model="filter.hasta"/>
+                    </div>
                 </div>
             </div>
+            <div flex></div>
+            <div layout="row" layout-align="end center" flex="" ng-if="!config.realtime">
+                <md-button  hide-sm class="md-fab" aria-label="Buscar" ng-click="methods.searchWithFilter()">
+                    <md-icon md-svg-src="./material-design-icons/action/svg/production/ic_search_24px.svg"></md-icon>
+                    <md-tooltip>Buscar</md-tooltip>
+                </md-button>
+                <md-button show-sm class="md-fab" aria-label="Guardar registros">
+                    <md-icon md-svg-src="./material-design-icons/file/svg/production/ic_file_download_24px.svg"></md-icon>
+                    <md-tooltip>Descargar registros</md-tooltip>
+                </md-button>
+            </div>
         </div>
-
-    </section>
-    <div
-        hide-sm
-        class="cookie-meteo-grafico cookie-meteo-block"
-        ng-if="config.selected"
-        ng-class="{
-            'cmi-temperatura selected ': config.indicadores.temperatura.selected,
-            'cmi-viento selected ': config.indicadores.viento.selected,
-            'cmi-humedad selected ': config.indicadores.humedad.selected
-            }"
-        flex>
-        <highchart id="chart1" config="config.chart"></highchart>
-        <md-content layout="row">
-            <span flex></span>
-        </md-content>
     </div>
-    <div layout-fill layout="row" ng-if="config.selected">
-        <div flex>
-            <md-checkbox ng-model="config.realtime" aria-label="Tiempo real">Tiempo real</md-checkbox>
-        </div>
-        <div flex=""></div>
-        <md-button  ng-if="!config.realtime" hide-sm class="md-fab" aria-label="Buscar" ng-click="methods.searchWithFilter()">
-            <md-icon md-svg-src="./material-design-icons/action/svg/production/ic_search_24px.svg"></md-icon>
-            <md-tooltip>Buscar</md-tooltip>
-        </md-button>
 
-        <md-button ng-if="!config.realtime" show-sm class="md-fab" aria-label="Guardar registros">
-            <md-icon md-svg-src="./material-design-icons/file/svg/production/ic_file_download_24px.svg"></md-icon>
-            <md-tooltip>Descargar registros</md-tooltip>
-        </md-button>
-    </div>
 </section>

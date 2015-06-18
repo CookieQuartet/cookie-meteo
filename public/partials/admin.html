@@ -1,65 +1,116 @@
 <div class="cookie-meteo-admin">
     <md-content layout="row" layout-fill layout-padding>
         <div flex="20" flex-lg="5" flex-gt-lg="20" style="padding:0 !important"; hide-md hide-sm></div>
-        <md-whiteframe ng-if="isAdmin" class="md-whiteframe-z1" style="margin:0 !important; padding:0 2px;"
-                       layout-sm="row"
-                       flex="90"
-                       flex-sm="90"
-                       flex-gt-sm="60"
-                       flex-md="100"
-                       flex-gt-md="90"
-                       flex-lg="90"
-                       flex-gt-lg="60">
+        <md-whiteframe
+                ng-if="isAdmin"
+                class="md-whiteframe-z1"
+                style="margin:0 !important; padding:0 2px;"
+                layout-sm="row"
+                flex="90"
+                flex-sm="90"
+                flex-gt-sm="60"
+                flex-md="100"
+                flex-gt-md="90"
+                flex-lg="90"
+                flex-gt-lg="60">
             <md-list layout-fill style="padding:2px 0 0 0">
+                <md-subheader class="md-no-sticky">
+                    <span>Luces</span>
+                </md-subheader>
+                <md-list-item style="height: 69px; padding: 0 16px;margin-top: 4px;background-color: aliceblue;">
+                    <md-icon style="padding-left: 20px;margin-right: 48px;" md-svg-icon="material-design-icons/image/svg/production/ic_wb_incandescent_24px.svg" class="cmi-name"></md-icon>
+                    <p> Control de luces de la estación metereológica </p>
+                    <md-button class="md-fab md-mini md-primary" aria-label="Encendido de luces" ng-click="methods.updateLights()">
+                        <md-icon md-svg-src="./material-design-icons/content/svg/production/ic_save_24px.svg"></md-icon>
+                        <md-tooltip>Guardar cambios</md-tooltip>
+                    </md-button>
+                </md-list-item>
+                <md-divider></md-divider>
+                <md-list-item >
+                    <div class="md-no-style md-list-item-inner">
+                        <md-icon md-svg-icon="material-design-icons/image/svg/production/ic_wb_incandescent_24px.svg" class="cmi-icon-mini-mini cmi-icon-sub"></md-icon>
+                        <p style="padding-left: 12px;"> Encendido manual </p>
+                        <md-switch class="md-primary" ng-model="config.serverConfig.estacion.luces.on"></md-switch>
+                    </div>
+                </md-list-item>
+                <md-list-item >
+                    <div class="md-no-style md-list-item-inner">
+                        <md-icon md-svg-icon="material-design-icons/action/svg/production/ic_alarm_24px.svg" class="cmi-icon-mini-mini cmi-icon-sub"></md-icon>
+                        <p style="padding-left: 12px;"> Horario de encendido (automático) </p>
+                        <input class="cmi-input-threshold" type="time" ng-model="config.serverConfig.estacion.luces.start"/>
+                    </div>
+                </md-list-item>
+                <md-list-item >
+                    <div class="md-no-style md-list-item-inner">
+                        <md-icon md-svg-icon="material-design-icons/action/svg/production/ic_alarm_24px.svg" class="cmi-icon-mini-mini cmi-icon-sub"></md-icon>
+                        <p style="padding-left: 12px;"> Horario de apagado (automático) </p>
+                        <input class="cmi-input-threshold" type="time" ng-model="config.serverConfig.estacion.luces.stop"/>
+                    </div>
+                </md-list-item>
+                <md-divider></md-divider>
                 <md-subheader class="md-no-sticky">
                     <span>Alarmas</span>
                 </md-subheader>
-                <md-list-item style="height: 69px; padding: 8px 0 0px 0;">
+                <md-list-item style="height: 69px; padding: 0;margin-top: 4px;background-color: aliceblue;">
                     <md-icon style="padding-left: 20px;margin-right: 48px;" md-svg-icon="material-design-icons/social/svg/production/ic_notifications_24px.svg" class="cmi-name"></md-icon>
-                    <p> Enviar mail con alarmas </p>
-                    <md-checkbox class="md-secondary" ng-model="config.alarmsOn" style="padding-right:20px;"></md-checkbox>
-                </md-list-item>
-                <md-divider></md-divider>
-                <md-list-item ng-if="config.alarmsOn" layout-padding style="height: 69px; padding: 8px 16px 8px 16px;">
-                    <md-icon style="padding-left: 20px;margin-right: 48px;" md-svg-icon="material-design-icons/content/svg/production/ic_mail_24px.svg" class="cmi-name"></md-icon>
-                    <md-input-container md-no-float flex style="padding-left:0;">
-                        <input ng-model="config.serverConfig.mailAlarm" type="text" placeholder="Email">
-                    </md-input-container>
-                    <md-button class="md-fab md-mini md-primary" aria-label="Actualizar email" ng-click="methods.updateEmail()">
+                    <p> Alarmas y notificaciones </p>
+                    <md-switch class="md-primary" ng-model="config.serverConfig.sendAlarms"></md-switch>
+                    <md-button class="md-fab md-mini md-primary" aria-label="Actualizar email" ng-click="methods.updateAlarms()">
                         <md-icon md-svg-src="./material-design-icons/content/svg/production/ic_save_24px.svg"></md-icon>
-                        <md-tooltip>Actualizar email</md-tooltip>
+                        <md-tooltip>Guardar cambios</md-tooltip>
                     </md-button>
                 </md-list-item>
-                <!--<md-divider></md-divider>-->
+                <md-divider></md-divider>
+                <md-list ng-if="config.serverConfig.sendAlarms">
+                    <md-list-item ng-if="config.serverConfig.sendAlarms" layout-padding style="height: 69px; padding: 8px 16px 8px 16px;">
+                        <md-icon style="padding-left: 36px;margin-right: 32px;" md-svg-icon="material-design-icons/content/svg/production/ic_mail_24px.svg" class="cmi-name"></md-icon>
+                        <md-input-container md-no-float flex style="padding-left:0;">
+                            <input ng-model="config.serverConfig.mailAlarm" type="text" placeholder="Email">
+                        </md-input-container>
+                    </md-list-item>
+                    <md-list-item style="padding-left: 16px; padding-right: 16px;">
+                        <md-icon style="padding-left: 20px;" md-svg-icon="material-design-icons/social/svg/production/ic_notifications_24px.svg" class="cmi-name"></md-icon>
+                        <p> Alarma por puerta abierta </p>
+                        <md-checkbox class="md-primary" ng-model="config.serverConfig.estacion.alarmas.openDoor"></md-checkbox>
+                    </md-list-item>
+                    <md-list-item style="padding-left: 16px; padding-right: 16px;">
+                        <md-icon style="padding-left: 20px;" md-svg-icon="material-design-icons/social/svg/production/ic_notifications_24px.svg" class="cmi-name"></md-icon>
+                        <p> Alarma por celda solar desconectada </p>
+                        <md-checkbox class="md-primary" ng-model="config.serverConfig.estacion.alarmas.lowBattery"></md-checkbox>
+                    </md-list-item>
+                </md-list>
                 <md-subheader class="md-no-sticky">
                     <span>Sensores</span>
                 </md-subheader>
-                <!--<md-divider></md-divider>-->
                 <md-list-item style="height: 65px; padding: 0 0 0 16px;background-color: rgba(255, 250, 205, 0.5);margin-top: 4px;">
                     <div class="md-no-style md-list-item-inner">
                         <md-icon style="padding-left:2px; padding-right: 18px;" md-svg-icon="material-design-icons/image/svg/production/ic_timer_24px.svg" class="cmi-name"></md-icon>
                         <p> Tiempo entre muestras </p>
                         <input class="cmi-input-sample" type="number" ng-model="config.serverConfig.interval"/>
-                        <span>segundos</span>
+                        <span style="margin-right:8px;">segundos</span>
                         <md-button class="md-fab md-mini md-primary" aria-label="Actualizar tiempo de muestreo" ng-click="methods.updateSampleTime()">
                             <md-icon md-svg-src="./material-design-icons/content/svg/production/ic_save_24px.svg"></md-icon>
-                            <md-tooltip>Actualizar tiempo de muestreo</md-tooltip>
+                            <md-tooltip>Guardar cambios</md-tooltip>
                         </md-button>
                     </div>
                 </md-list-item>
                 <md-divider></md-divider>
                 <md-list style="padding:0;" ng-repeat="item in config.indicadores track by item.id">
-                    <md-list-item ng-class="{
-                        'cmi-temperatura-settings': item.id === 'temperatura',
-                        'cmi-viento-settings': item.id === 'viento',
-                        'cmi-humedad-settings': item.id === 'humedad'
-                    }">
+                    <md-list-item
+                        ng-class="{
+                            'cmi-temperatura-settings': item.id === 'temperatura',
+                            'cmi-viento-settings': item.id === 'viento',
+                            'cmi-humedad-settings': item.id === 'humedad'
+                        }">
                         <md-icon class="cmi-icon-mini" md-svg-icon="{{item.icon_black}}"></md-icon>
-                        <p> {{ item.description }} </p>
-                        <md-switch class="md-secondary" ng-model="item.visible"></md-switch>
-                        <md-tooltip>Activar/Desactivar sensor</md-tooltip>
+                        <p> {{ item.longDescription }} </p>
+                        <md-switch class="md-primary" ng-model="config.serverConfig.estacion.sensores[item.id].active"></md-switch>
+                        <md-button class="md-fab md-mini md-primary" aria-label="Guardar cambios" ng-click="methods.updateSensor(item)">
+                            <md-icon md-svg-src="./material-design-icons/content/svg/production/ic_save_24px.svg"></md-icon>
+                            <md-tooltip>Guardar cambios</md-tooltip>
+                        </md-button>
                     </md-list-item>
-                    <div ng-if="item.visible">
+                    <div ng-if="config.serverConfig.estacion.sensores[item.id].active">
                         <md-list-item >
                             <div class="md-no-style md-list-item-inner">
                                 <md-icon style="padding-left: 20px;" md-svg-icon="material-design-icons/image/svg/production/ic_tune_24px.svg" class="cmi-name"></md-icon>
@@ -75,7 +126,7 @@
                             <div class="md-no-style md-list-item-inner">
                                 <md-icon md-svg-icon="img/climacons/SVG/Degrees-Celcius.svg" class="cmi-icon-mini cmi-icon-sub"></md-icon>
                                 <p> Unidades </p>
-                                <input type="text" class="cmi-text-units" ng-model="item.units"/>
+                                <input type="text" class="cmi-text-units" ng-model="config.serverConfig.estacion.sensores[item.id].units"/>
                             </div>
                         </md-list-item>
                         <md-list-item >
@@ -95,16 +146,9 @@
                         <md-list-item style="padding-left: 16px; padding-right: 16px;">
                             <md-icon style="padding-left: 20px;" md-svg-icon="material-design-icons/social/svg/production/ic_notifications_24px.svg" class="cmi-name"></md-icon>
                             <p> Incluir en alarmas </p>
-                            <md-checkbox class="md-secondary" ng-model="item.alarmIncluded"></md-checkbox>
+                            <md-checkbox class="md-primary" ng-model="config.serverConfig.estacion.sensores[item.id].alarmIncluded"></md-checkbox>
                         </md-list-item>
-                        <md-divider></md-divider>
-                        <md-list-item style="padding-left: 16px; padding-right: 16px;">
-                            <span flex></span>
-                            <md-button class="md-fab md-mini md-primary" aria-label="Guardar cambios" ng-click="methods.updateSensor(item)">
-                                <md-icon md-svg-src="./material-design-icons/content/svg/production/ic_save_24px.svg"></md-icon>
-                                <md-tooltip>Actualizar parámetros del sensor</md-tooltip>
-                            </md-button>
-                        </md-list-item>
+                        <!--<md-divider></md-divider>-->
                     </div>
                     <md-divider></md-divider>
                 </md-list>

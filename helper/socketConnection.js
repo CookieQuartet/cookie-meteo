@@ -13,14 +13,23 @@ function SocketConnection(io){
   var ServerConfig = require('./serverConfig');
   var Timer = require('./timer');
 
+  // polling para el subsistema de alarmas
+  var polling = 30;
+  // manager de configuracion
   var serverConfig = new ServerConfig();
+  // manager de acceso al puerto serie
   var sDispatcher = new SerialDispatcher(serverConfig);
-  var timer = new Timer(serverConfig.config().interval * 1000, function() {
-  //var timer = new Timer(30000, function() {
+  // adquisidor de datos
+  var timer = new Timer(serverConfig.config().interval, function() {
     sDispatcher.addRequest(null, { command: 'RDAS' });
     sDispatcher.wakeUp();
   });
-  // callback para guardar en Parse la adquisicion de datos
+  // heartbeat de administracion
+  var idenManager = new Timer(polling, function(socket) {
+    sDispatcher.addRequest(socket, { command: 'IDEN' });
+    sDispatcher.wakeUp();
+  });
+  // callback/promesa para guardar en Parse la adquisicion de datos
   sDispatcher.setCallback(function(data) {
     var defer = Q.defer();
     app.insert('Sensores', data, function(err, response) {
@@ -54,6 +63,8 @@ function SocketConnection(io){
           .setInterval(config.interval)
           .stop()
           .start();
+        socket.emit('server:set_config', config);
+        socket.emit('server:set_config_done');
       });
     });
     // un cliente quiere ejecutar un comando sobre la placa
@@ -71,8 +82,11 @@ function SocketConnection(io){
       socket.emit('server:set_config', serverConfig.config());
     });
     // un cliente quiere modificar la configuracion
-    socket.on('client:set_config', function (event) {
-
+    socket.on('client:set_config', function (config) {
+      serverConfig.setConfig(config).then(function(config) {
+        socket.emit('server:set_config', config);
+        socket.emit('server:set_config_done');
+      });
     });
     // un cliente chequea si esta logueado
     socket.on('client:checkLogged', function(event) {
@@ -91,6 +105,14 @@ function SocketConnection(io){
       serverConfig.logout(logout.token, function(response) {
         socket.emit('server:logout', response);
       });
+    });
+    // un admin entra a settings
+    socket.on('client:admin_in', function() {
+      idenManager.setSocket(socket).start();
+    });
+    // un admin sale de settings
+    socket.on('client:admin_out', function() {
+      idenManager.stop().setSocket(null);
     });
     // un cliente se desconecta
     socket.on('disconnect', function () {

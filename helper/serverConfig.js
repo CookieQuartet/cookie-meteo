@@ -13,47 +13,63 @@ var ServerConfig = function() {
         id: 'configObject',
         interval: 60, // un minuto
         mailAlarm: 'mmaestri@gmail.com',
+        sendAlarms: true,
         estacion: {
           sensores: {
             temperatura: {
               active: true,
+              alarmIncluded: true,
+              units: 'ºC',
               channel: 0,
               thresholds: {
                 max: 50,
                 min: 0
               },
               transfer: {
-                a: 1,
-                b: 20,
-                c: 30
+                a: 0,
+                b: 51.28,
+                c: -20.5128
               }
             },
             viento: {
               active: true,
-              channel: 0,
+              alarmIncluded: true,
+              units: 'km/h',
+              channel: 1,
               thresholds: {
-                max: 50,
-                min: 0
+                max: 216,
+                min: 1.08
               },
               transfer: {
-                a: 10,
-                b: 20,
-                c: 30
+                a: 0,
+                b: 17.784,
+                c: 0.828
               }
             },
             humedad: {
               active: true,
-              channel: 0,
+              alarmIncluded: true,
+              units: '%',
+              channel: 2,
               thresholds: {
                 max: 50,
                 min: 0
               },
               transfer: {
-                a: 10,
-                b: 20,
-                c: 30
+                a: 0,
+                b: 1,
+                c: 0.5
               }
             }
+          },
+          alarmas: {
+            openDoor: false,
+            lowBattery: false
+          },
+          luces: {
+            on: true,
+            start: null,
+            stop: null
           }
         }
       };
@@ -130,13 +146,15 @@ var ServerConfig = function() {
     /*
     self.setConfig({
       id: 'configObject',
-      interval: 60,
+      interval: 60, // un minuto
       mailAlarm: 'mmaestri@gmail.com',
+      sendAlarms: true,
       estacion: {
         sensores: {
           temperatura: {
-            id: 'temperatura',
             active: true,
+            alarmIncluded: true,
+            units: 'ºC',
             channel: 0,
             thresholds: {
               max: 50,
@@ -149,8 +167,9 @@ var ServerConfig = function() {
             }
           },
           viento: {
-            id: 'viento',
             active: true,
+            alarmIncluded: true,
+            units: 'km/h',
             channel: 1,
             thresholds: {
               max: 216,
@@ -163,8 +182,9 @@ var ServerConfig = function() {
             }
           },
           humedad: {
-            id: 'humedad',
             active: true,
+            alarmIncluded: true,
+            units: '%',
             channel: 2,
             thresholds: {
               max: 50,
@@ -176,13 +196,20 @@ var ServerConfig = function() {
               c: 0.5
             }
           }
+        },
+        alarmas: {
+          openDoor: false,
+          lowBattery: false
+        },
+        luces: {
+          on: true,
+          start: null,
+          stop: null
         }
       }
     });
     */
   });
-
-  //this.set('Config', config);
 };
 
 module.exports = ServerConfig;

@@ -27,13 +27,15 @@ function SerialDispatcher(serverConfig) {
       }
   }
   function processData(data) {
-    var values = _.chain(data.split(';'))
-        .remove(function (item) { return item.length !== 0; })
-        .map(function (item) { return parseInt(item) })
-        .value();
+    var _values = data.replace(/\r/g, ''),
+        values = _.chain(_values.split(';'))
+          .remove(function (item) { return item.length !== 0; })
+          .map(function (item) { return parseInt(item) })
+          .value();
     return (function() {
       var response = {},
-          sensores = _.filter(serverConfig.config().estacion.sensores, { active: true });
+          //sensores = _.filter(serverConfig.config().estacion.sensores, { active: true });
+          sensores = serverConfig.config().estacion.sensores;
       _.each(sensores, function(sensor) {
         response[sensor.id] = transformData(values[sensor.channel], sensor.transfer, sensor.thresholds)
       });
@@ -68,7 +70,7 @@ function SerialDispatcher(serverConfig) {
           });
         });
       } else {
-        // son la respuesta de un comando
+        // es la respuesta de un comando
         _self.connHandler.emit({
           type: 'server:data',
           data: {

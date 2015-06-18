@@ -34,6 +34,7 @@ html {
 
 .cookie-meteo-client {
   display: block;
+  margin-top: 0 !important;
 }
 
 .cookie-meteo-indicador {
@@ -96,6 +97,7 @@ html {
 }
 
 .cookie-meteo-grafico {
+  margin: 0 !important;
 
 }
 
@@ -114,8 +116,8 @@ html {
 }
 
 .cmi-icon-mini-mini {
-  width:32px !important;
-  height: 32px !important;
+  width: 24px !important;
+  height: 24px !important;
   min-width: 32px !important;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
@@ -138,7 +140,10 @@ html {
 
 .cmi-text-align {
   text-align: center;
-  margin: 10px 0 10px 0 !important;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:40px;
 }
 
 .cmi-units {
@@ -147,7 +152,7 @@ html {
 
 .cmi-date {
   margin:0 10px 0 10px;
-  width: 140px;
+  width: 190px;
 }
 
 .cmi-show-history {

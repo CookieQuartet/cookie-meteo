@@ -28,16 +28,63 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                   $state.go('client');
                 } else {
                   $scope.isAdmin = true;
-                  $scope.config = MeteoConfig.config();
+                  $scope.config = _.clone(MeteoConfig.config(), true);
+                  $scope.config.selected = null;
                   $scope.methods = {
                     logout: function() {
                       MeteoConfig.logout();
                       $state.go('client');
                     },
                     updateSampleTime: function() {
-
+                      event.preventDefault();
+                      event.stopPropagation();
+                      MeteoConfig.send('client:set_acq_interval', {
+                        interval: $scope.config.serverConfig.interval
+                      });
+                    },
+                    updateAlarms: function() {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      MeteoConfig.send('client:set_config', {
+                        mailAlarm: $scope.config.serverConfig.mailAlarm,
+                        sendAlarms: $scope.config.serverConfig.sendAlarms,
+                        estacion: {
+                          alarmas: {
+                            openDoor: $scope.config.serverConfig.estacion.alarmas.openDoor,
+                            lowBattery: $scope.config.serverConfig.estacion.alarmas.lowBattery
+                          }
+                        }
+                      });
+                    },
+                    updateLights: function() {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      MeteoConfig.send('client:set_config', {
+                        estacion: {
+                          luces: {
+                            on: $scope.config.serverConfig.estacion.luces.on,
+                            start: new Date($scope.config.serverConfig.estacion.luces.start),
+                            stop: new Date($scope.config.serverConfig.estacion.luces.stop)
+                          }
+                        }
+                      });
+                    },
+                    updateSensor: function(sensor) {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      var patch = {};
+                      patch[sensor.id] = $scope.config.serverConfig.estacion.sensores[sensor.id];
+                      MeteoConfig.send('client:set_config', {
+                        estacion: {
+                          sensores: patch
+                        }
+                      });
                     }
-                  }
+                  };
+                  MeteoConfig.send('client:admin_in');
+                  $scope.$on('destroy', function() {
+                    MeteoConfig.send('client:admin_out');
+                  });
                 }
               });
             }
@@ -45,7 +92,8 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
           .state('login', {
             url: "/login",
             templateUrl: "partials/login.html",
-            controller: function($scope, $state, MeteoConfig, $mdToast, $animate) {
+            controller: function($scope, $state, MeteoConfig, $mdToast) {
+              MeteoConfig.send('client:admin_out');
               $scope.config = {
                 user: {
                   login: {
@@ -103,7 +151,6 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                   );
                 }
               };
-
               $scope.methods.checkLogged();
             }
           })
@@ -111,6 +158,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
             url: "/",
             templateUrl: "partials/client.html",
             controller: function($scope, MeteoConfig) {
+              MeteoConfig.send('client:admin_out');
               $scope.config = MeteoConfig.config();
               $scope.filter = {
                 desde: new Date(),
@@ -118,24 +166,25 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                 data: null
               };
               $scope.$on('server:data', function(event, message) {
-                if(message.data.temperatura){
+                if(message.data && message.data.temperatura){
                   $scope.config.indicadores.temperatura.thresholdMin = message.data.temperatura.minThresholdAlarm;
                   $scope.config.indicadores.temperatura.thresholdMax = message.data.temperatura.maxThresholdAlarm;
                   $scope.config.indicadores.temperatura.value = message.data.temperatura.value;
                   $scope.config.indicadores.temperatura.series.data.push({x: (new Date(message.data.createdAt)).getTime(), y: message.data.temperatura.value })
                 }
-                if(message.data.viento){
+                if(message.data && message.data.viento){
                   $scope.config.indicadores.viento.thresholdMin = message.data.viento.minThresholdAlarm;
                   $scope.config.indicadores.viento.thresholdMax = message.data.viento.maxThresholdAlarm;
                   $scope.config.indicadores.viento.value = message.data.viento.value;
                   $scope.config.indicadores.viento.series.data.push({x: (new Date(message.data.createdAt)).getTime(), y: message.data.viento.value })
                 }
-                if(message.data.humedad){
+                if(message.data && message.data.humedad){
                   $scope.config.indicadores.humedad.thresholdMin = message.data.humedad.minThresholdAlarm;
                   $scope.config.indicadores.humedad.thresholdMax = message.data.humedad.maxThresholdAlarm;
                   $scope.config.indicadores.humedad.value = message.data.humedad.value;
                   $scope.config.indicadores.humedad.series.data.push({x: (new Date(message.data.createdAt)).getTime(), y: message.data.humedad.value })
                 }
+                console.log(message);
               });
               $scope.$watch('config.realtime', function(newValue, oldValue) {
                 if(newValue && $scope.config.selected) {
@@ -160,8 +209,9 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                 searchWithFilter: function() {
                   var Sensores = Parse.Object.extend("Sensores");
                   var query = new Parse.Query(Sensores);
-                  query.greaterThanOrEqualTo("createdAt", $scope.filter.desde.clearTime());
-                  query.lessThanOrEqualTo("createdAt", $scope.filter.hasta.clearTime());
+                  query.limit(1000);
+                  query.greaterThanOrEqualTo("createdAt", $scope.filter.desde);
+                  query.lessThanOrEqualTo("createdAt", $scope.filter.hasta);
                   query.find({
                     success: function(muestras) {
                       var data = {

@@ -11,6 +11,7 @@ angular.module('CookieMeteoServices', [])
               temperatura: {
                 id: 'temperatura',
                 description: 'Temperatura',
+                longDescription: 'Sensor de temperatura MCP9701A',
                 units: 'ºC',
                 value: 0,
                 icon: 'img/climacons/svg/Thermometer-50-white.svg',
@@ -28,6 +29,7 @@ angular.module('CookieMeteoServices', [])
               viento: {
                 id: 'viento',
                 description: 'Velocidad del viento',
+                longDescription: 'Sensor de velocidad del viento 107U',
                 units: 'km/h',
                 value: 0,
                 icon: 'img/climacons/svg/Wind-white.svg',
@@ -45,6 +47,7 @@ angular.module('CookieMeteoServices', [])
               humedad: {
                 id: 'humedad',
                 description: 'Humedad',
+                longDescription: 'Sensor de humedad HIH4000',
                 units: '%',
                 value: 0,
                 icon: 'img/climacons/svg/Cloud-Drizzle-Alt-white.svg',
@@ -63,6 +66,7 @@ angular.module('CookieMeteoServices', [])
             chart: {
               options: {
                 chart: {
+                  height: 300,
                   type: 'spline'
                 },
                 animation: Highcharts.svg,
@@ -153,17 +157,26 @@ angular.module('CookieMeteoServices', [])
           };
       // el cliente recibe datos del servidor
       $socket.on('server:data', function (data) {
-        //console.log(data);
         $rootScope.$broadcast('server:data', data);
       });
       // el servidor envia la configuracion base
       $socket.on('server:set_config', function (data) {
         if(typeof data !== 'undefined') {
+          if(data.estacion.luces.start) {
+            data.estacion.luces.start = new Date(data.estacion.luces.start);
+          }
+          if(data.estacion.luces.stop) {
+            data.estacion.luces.stop = new Date(data.estacion.luces.stop);
+          }
           exportConfig.serverConfig = data;
           defer.resolve(exportConfig);
         } else  {
           defer.resolve(false);
         }
+      });
+      // el servidor informa que la configuracion fue modificada
+      $socket.on('server:set_config_done', function() {
+        $rootScope.$broadcast('config_changed');
       });
       // el servidor responde si hay una sesion activa
       $socket.on('server:checkLogged', function (data) {
@@ -190,6 +203,7 @@ angular.module('CookieMeteoServices', [])
       $socket.emit('client:get_config');
       // solicitar el estado de la adquisicion
       $socket.emit('client:get_acq_status');
+      // solicitar datos iniciales
       $socket.emit('client:request', { command: 'RDAS' });
       return service;
   });
