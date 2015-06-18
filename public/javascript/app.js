@@ -29,6 +29,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                 } else {
                   $scope.isAdmin = true;
                   $scope.config = _.clone(MeteoConfig.config(), true);
+                  $scope.config.report = null;
                   $scope.config.selected = null;
                   $scope.methods = {
                     logout: function() {
@@ -84,6 +85,13 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                   MeteoConfig.send('client:admin_in');
                   $scope.$on('destroy', function() {
                     MeteoConfig.send('client:admin_out');
+                  });
+
+                  $scope.$on('server:data', function(event, data) {
+                    console.log(data.message);
+                    if(data.message === '\rArquitectura Avanzada') {
+                      $scope.config.report = Date.now();
+                    }
                   });
                 }
               });
@@ -165,36 +173,44 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                 hasta: new Date(),
                 data: null
               };
-              $scope.$on('server:data', function(event, message) {
-                if(message.data && message.data.temperatura){
-                  $scope.config.indicadores.temperatura.thresholdMin = message.data.temperatura.minThresholdAlarm;
-                  $scope.config.indicadores.temperatura.thresholdMax = message.data.temperatura.maxThresholdAlarm;
-                  $scope.config.indicadores.temperatura.value = message.data.temperatura.value;
-                  $scope.config.indicadores.temperatura.series.data.push({x: (new Date(message.data.createdAt)).getTime(), y: message.data.temperatura.value })
-                }
-                if(message.data && message.data.viento){
-                  $scope.config.indicadores.viento.thresholdMin = message.data.viento.minThresholdAlarm;
-                  $scope.config.indicadores.viento.thresholdMax = message.data.viento.maxThresholdAlarm;
-                  $scope.config.indicadores.viento.value = message.data.viento.value;
-                  $scope.config.indicadores.viento.series.data.push({x: (new Date(message.data.createdAt)).getTime(), y: message.data.viento.value })
-                }
-                if(message.data && message.data.humedad){
-                  $scope.config.indicadores.humedad.thresholdMin = message.data.humedad.minThresholdAlarm;
-                  $scope.config.indicadores.humedad.thresholdMax = message.data.humedad.maxThresholdAlarm;
-                  $scope.config.indicadores.humedad.value = message.data.humedad.value;
-                  $scope.config.indicadores.humedad.series.data.push({x: (new Date(message.data.createdAt)).getTime(), y: message.data.humedad.value })
-                }
-                console.log(message);
+              var listeners = [
+                  $scope.$on('server:data', function(event, message) {
+                    if(message.data && message.data.temperatura){
+                      $scope.config.indicadores.temperatura.thresholdMin = message.data.temperatura.minThresholdAlarm;
+                      $scope.config.indicadores.temperatura.thresholdMax = message.data.temperatura.maxThresholdAlarm;
+                      $scope.config.indicadores.temperatura.value = message.data.temperatura.value;
+                      $scope.config.indicadores.temperatura.series.data.push({x: (new Date(message.data.createdAt)).getTime(), y: message.data.temperatura.value })
+                    }
+                    if(message.data && message.data.viento){
+                      $scope.config.indicadores.viento.thresholdMin = message.data.viento.minThresholdAlarm;
+                      $scope.config.indicadores.viento.thresholdMax = message.data.viento.maxThresholdAlarm;
+                      $scope.config.indicadores.viento.value = message.data.viento.value;
+                      $scope.config.indicadores.viento.series.data.push({x: (new Date(message.data.createdAt)).getTime(), y: message.data.viento.value })
+                    }
+                    if(message.data && message.data.humedad){
+                      $scope.config.indicadores.humedad.thresholdMin = message.data.humedad.minThresholdAlarm;
+                      $scope.config.indicadores.humedad.thresholdMax = message.data.humedad.maxThresholdAlarm;
+                      $scope.config.indicadores.humedad.value = message.data.humedad.value;
+                      $scope.config.indicadores.humedad.series.data.push({x: (new Date(message.data.createdAt)).getTime(), y: message.data.humedad.value })
+                    }
+                    console.log(message);
+                  }),
+                $scope.$watch('config.realtime', function(newValue, oldValue) {
+                  if(newValue && $scope.config.selected) {
+                    $scope.config.chart.series.length = 0;
+                    $scope.config.chart.title.text = $scope.config.selected.description;
+                    $scope.config.chart.series.push($scope.config.selected.series);
+                  } else {
+                    $scope.methods.searchWithFilter();
+                  }
+                })
+              ];
+              $scope.$on('destroy', function() {
+                _.each(listeners, function(listener) {
+                  listener.call(null);
+                });
               });
-              $scope.$watch('config.realtime', function(newValue, oldValue) {
-                if(newValue && $scope.config.selected) {
-                  $scope.config.chart.series.length = 0;
-                  $scope.config.chart.title.text = $scope.config.selected.description;
-                  $scope.config.chart.series.push($scope.config.selected.series);
-                } else {
-                  $scope.methods.searchWithFilter();
-                }
-              });
+
               $scope.methods = {
                 select: function(indicador) {
                   _.each($scope.config.indicadores, function(item) {

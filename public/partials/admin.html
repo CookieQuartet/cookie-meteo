@@ -15,6 +15,15 @@
                 flex-gt-lg="60">
             <md-list layout-fill style="padding:2px 0 0 0">
                 <md-subheader class="md-no-sticky">
+                    <span>Estado</span>
+                </md-subheader>
+                <md-list-item style="height: 69px; padding: 0 16px;margin-top: 4px;background-color: aliceblue;">
+                    <md-icon style="padding-left: 20px;margin-right: 48px;" md-svg-icon="material-design-icons/hardware/svg/production/ic_memory_24px.svg" class="cmi-name"></md-icon>
+                    <p> Reporte de estado de la estación metereológica </p>
+                    <p style="margin-left:10px;float: right;text-align: right;"> OK: {{ config.report | date:'dd/MM/yyyy HH:mm:ss' || 'NO'}} </p>
+                </md-list-item>
+                <md-divider></md-divider>
+                <md-subheader class="md-no-sticky">
                     <span>Luces</span>
                 </md-subheader>
                 <md-list-item style="height: 69px; padding: 0 16px;margin-top: 4px;background-color: aliceblue;">
