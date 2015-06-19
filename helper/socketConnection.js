@@ -13,22 +13,25 @@ function SocketConnection(io){
   var ServerConfig = require('./serverConfig');
   var Timer = require('./timer');
 
-  // polling para el subsistema de alarmas
-  //var polling = 30;
+  // mailer
+  var mailer = require('./emailService');
   // manager de configuracion
-  var serverConfig = new ServerConfig();
+  var serverConfig = new ServerConfig(mailer);
   // manager de acceso al puerto serie
   var sDispatcher = new SerialDispatcher(serverConfig);
+  // polling para el subsistema de alarmas
+  var polling = 30;
   // adquisidor de datos
   var timer = new Timer(serverConfig.config().interval, function() {
     sDispatcher.addRequest(null, { command: 'RDAS' });
     sDispatcher.wakeUp();
   });
-  // heartbeat de administracion
-  /*var idenManager = new Timer(polling, function(socket) {
-    sDispatcher.addRequest(socket, { command: 'IDEN' });
+  // gestor de alarmas
+  var alarmManager = new Timer(polling, function() {
+    sDispatcher.addRequest(null, { command: 'RDDI' });
     sDispatcher.wakeUp();
-  });*/
+  });
+  alarmManager.start();
   // callback/promesa para guardar en Parse la adquisicion de datos
   sDispatcher.setCallback(function(data) {
     var defer = Q.defer();
@@ -63,7 +66,7 @@ function SocketConnection(io){
           .setInterval(config.interval)
           .stop()
           .start();
-        console.info('El período de muestreo fue cambiado a ', config.interval);
+        console.info('El perÃ­odo de muestreo fue cambiado a ', config.interval);
         socket.emit('server:set_config', config);
         socket.emit('server:set_config_done');
       });

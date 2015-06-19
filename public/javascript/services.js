@@ -155,6 +155,10 @@ angular.module('CookieMeteoServices', [])
               $socket.emit('client:stop_acq');
             }
           };
+      // el cliente recibe alarmas del servidor
+      $socket.on('server:alarm', function (data) {
+        $rootScope.$broadcast('server:alarm', data);
+      });
       // el cliente recibe datos del servidor
       $socket.on('server:data', function (data) {
         $rootScope.$broadcast('server:data', data);
@@ -178,6 +182,7 @@ angular.module('CookieMeteoServices', [])
       $socket.on('server:set_config_done', function() {
         $rootScope.$broadcast('config_changed');
       });
+      // el servidor informa que se ha reiniciado el puerto
       $socket.on('server:set_restart_port_done', function(data) {
         $rootScope.$broadcast('restart_port_done', data);
       });

@@ -20,16 +20,21 @@
                 <md-list-item style="height: 69px; padding: 0 16px;margin-top: 4px;background-color: aliceblue;">
                     <md-icon style="padding-left: 20px;margin-right: 48px;" md-svg-icon="material-design-icons/hardware/svg/production/ic_memory_24px.svg" class="cmi-name"></md-icon>
                     <p> Reporte de estado de la estación metereológica </p>
-                    <p style="margin-left:10px;float: right;text-align: right;"> {{ config.report | date:'dd/MM/yyyy HH:mm:ss' || 'NO'}} </p>
+                    <div
+                        ng-class="{
+                            'cmi-port-error': config.report.status === 'ERROR',
+                            'cmi-port-ok': config.report.status === 'OK'
+                        }"
+                        style="margin-left:10px;float: right;text-align: right;"> {{ config.report.message }} </div>
                     <md-button class="md-fab md-mini md-primary" aria-label="Actualizar estado" ng-click="methods.updateStatus()">
-                        <md-icon md-svg-src="./material-design-icons/action/svg/production/ic_autorenew_24px.svg"></md-icon>
+                        <md-icon md-svg-src="./material-design-icons/action/svg/production/ic_help_outline_24px.svg"></md-icon>
                         <md-tooltip>Actualizar estado</md-tooltip>
                     </md-button>
                 </md-list-item>
                 <md-divider></md-divider>
                 <md-list-item style="height: 69px; padding: 0 16px;margin-top: 4px;background-color: aliceblue;">
                     <md-icon style="padding-left: 20px;margin-right: 48px;" md-svg-icon="material-design-icons/hardware/svg/production/ic_memory_24px.svg" class="cmi-name"></md-icon>
-                    <p> Estado de la interface RS232 </p>
+                    <p> Reiniciar la interface RS232 </p>
                     <div
                         ng-class="{
                             'cmi-port-error': config.serialPortStatus.status === 'ERROR',
@@ -113,8 +118,8 @@
                 <md-list-item style="height: 65px; padding: 0 0 0 16px;background-color: rgba(255, 250, 205, 0.5);margin-top: 4px;">
                     <div class="md-no-style md-list-item-inner">
                         <md-icon style="padding-left:2px; padding-right: 18px;" md-svg-icon="material-design-icons/image/svg/production/ic_timer_24px.svg" class="cmi-name"></md-icon>
-                        <p> Tiempo entre muestras </p>
-                        <input class="cmi-input-sample" type="number" ng-model="config.serverConfig.interval"/>
+                        <p> Tiempo entre muestras (> 20 seg)</p>
+                        <input class="cmi-input-sample" type="number" min="20" ng-model="config.serverConfig.interval"/>
                         <span style="margin-right:8px;">segundos</span>
                         <md-button class="md-fab md-mini md-primary" aria-label="Actualizar tiempo de muestreo" ng-click="methods.updateSampleTime()">
                             <md-icon md-svg-src="./material-design-icons/content/svg/production/ic_save_24px.svg"></md-icon>

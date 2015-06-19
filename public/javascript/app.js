@@ -22,7 +22,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
           .state('admin', {
             url: "/admin",
             templateUrl: "partials/admin.html",
-            controller: function($scope, MeteoConfig, $state) {
+            controller: function($scope, MeteoConfig, $state, $filter, $interval) {
               checkLogged($scope, MeteoConfig, function(userData) {
                 if(!userData || userData.username !== 'admin') {
                   $state.go('client');
@@ -92,17 +92,24 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                   //MeteoConfig.send('client:admin_in');
                   $scope.$on('destroy', function() {
                     //MeteoConfig.send('client:admin_out');
+                    $interval.cancel(intervalId);
                   });
 
                   $scope.$on('server:data', function(event, data) {
-                    console.log(data.message);
                     if(data.message === '\rArquitectura Avanzada') {
-                      $scope.config.report = Date.now();
+                      $scope.config.report = {
+                        message:'OK - ' + $filter('date')(Date.now(), 'dd/MM/yyyy HH:mm:ss'),
+                        status: 'OK'
+                      };
                     }
                   });
                   $scope.$on('restart_port_done', function(event, data) {
                     $scope.config.serialPortStatus = data;
-                  })
+                  });
+
+                  var intervalId = $interval(function() {
+                    MeteoConfig.send('client:iden');
+                  }, 20000);
                 }
               });
             }

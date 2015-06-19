@@ -14,6 +14,16 @@ angular.module('CookieMeteo')
             .position('left top')
             .hideDelay(2000)
         );
+      },
+      toastAlarm: function(text) {
+        $mdToast.show(
+            $mdToast.simple()
+              .content(text)
+              .action('OK')
+              .highlightAction(false)
+              .position('right top')
+              .hideDelay(10000)
+        );
       }
     };
     // usuario hace login
@@ -51,5 +61,11 @@ angular.module('CookieMeteo')
     // aviso de reinicio de puerto serie
     $rootScope.$on('restart_port_done', function(event, data) {
       $scope.methods.toast('Se reinició el puerto')
-    })
+    });
+    // aviso de alarma
+    $rootScope.$on('server:alarm', function(event, data) {
+      _.each(data.message, function(alarm) {
+        $scope.methods.toastAlarm(alarm.message)
+      });
+    });
   });

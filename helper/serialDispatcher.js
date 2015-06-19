@@ -5,7 +5,8 @@ var transformData = require('./transformData');
 
 function SerialDispatcher(serverConfig) {
   var _self = this,
-      _callback = function() {};
+      _callback = function() {},
+      _working = false;
   this._serialPort = null;
   function ConnHandler() {
       this.sockets = {};
@@ -41,6 +42,38 @@ function SerialDispatcher(serverConfig) {
       return response;
     })();
   }
+  function processAlarms(code) {
+    var alarms = [];
+    if(code > 0) {
+      // es una alarma
+      var _config = serverConfig.config(),
+          _general = config.sendAlarms,
+          _alarmas = config.estacion.alarmas;
+      if (code === 3) {
+        if (_general && _alarmas.openDoor) {
+          alarms.push({type: 'OPEN_DOOR', message: 'Puerta abierta'})
+        }
+        if (_general && _alarmas.lowBattery) {
+          alarms.push({type: 'LOW_BATTERY', message: 'Celda solar desconectada'})
+        }
+      } else if (code == 2 && _general && _alarmas.openDoor) {
+        alarms.push({type: 'OPEN_DOOR', message: 'Puerta abierta'})
+      } else if (code == 1 && _general && _alarmas.lowBattery) {
+        alarms.push({type: 'LOW_BATTERY', message: 'Celda solar desconectada'})
+      }
+      if(_general) {
+        // envio mail
+        serverConfig.sendMail(alarms);
+        // envio las alarmas a los clientes conectados
+        _self.connHandler.broadcast({
+          type: 'server:alarm',
+          data: {
+            message: alarms
+          }
+        });
+      }
+    }
+  }
   function init() {
     var defer = Q.defer();
     // seleccion de puertos, siempre selecciona todos
@@ -66,6 +99,9 @@ function SerialDispatcher(serverConfig) {
                 }
               });
             });
+          } else if(data.replace(/\r/g, '').length === 1) {
+            // lectura de entradas digitales
+            processAlarms(parseInt(data.replace(/\r/g, '')));
           } else {
             // es la respuesta de un comando
             _self.connHandler.emit({
@@ -79,7 +115,7 @@ function SerialDispatcher(serverConfig) {
         defer.resolve({ status: 'OK', message: 'Interface OK' });
       } else {
         _self.connHandler.emit({
-          type: 'server:data',
+          type: 'server:error',
           data: {
             message: error.message
           }

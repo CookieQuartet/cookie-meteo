@@ -7,7 +7,7 @@ var app = new Parse({
   api_key: "utg0CdEubwtz0m2meWqPRnh1nOnyMBFVMGG3aoNN"
 });
 
-var ServerConfig = function() {
+var ServerConfig = function(mailer) {
   var self = this,
       config = {
         id: 'configObject',
@@ -140,8 +140,15 @@ var ServerConfig = function() {
   this.config = function() {
     return _.clone(config);
   };
-  // inicializacion
 
+  this.sendMail = function(alarms) {
+    var destination = config.mailAlarm,
+        subject = 'Estación metereológica - Alarmas',
+        content = JSON.stringify(alarms);
+
+    //mailer.sendEmail(destination, subject, content);
+  };
+  // inicializacion
   this.init().then(function() {
     /*
     self.setConfig({
