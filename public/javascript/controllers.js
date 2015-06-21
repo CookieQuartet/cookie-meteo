@@ -64,8 +64,12 @@ angular.module('CookieMeteo')
     });
     // aviso de alarma
     $rootScope.$on('server:alarm', function(event, data) {
-      _.each(data.message, function(alarm) {
-        $scope.methods.toastAlarm(alarm.message)
-      });
+      if(typeof data.message === 'string') {
+        $scope.methods.toastAlarm(data.message);
+      } else {
+        _.each(data.message, function(alarm) {
+          $scope.methods.toastAlarm(alarm.message)
+        });
+      }
     });
   });

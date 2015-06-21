@@ -40,6 +40,13 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                     updateStatus: function() {
                       MeteoConfig.send('client:iden');
                     },
+                    updatePort: function() {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      MeteoConfig.send('client:set_config', {
+                        port: $scope.config.serverConfig.port
+                      });
+                    },
                     updateSampleTime: function() {
                       event.preventDefault();
                       event.stopPropagation();
@@ -68,6 +75,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                         estacion: {
                           luces: {
                             on: $scope.config.serverConfig.estacion.luces.on,
+                            manual: $scope.config.serverConfig.estacion.luces.manual,
                             start: new Date($scope.config.serverConfig.estacion.luces.start),
                             stop: new Date($scope.config.serverConfig.estacion.luces.stop)
                           }
@@ -86,30 +94,50 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                       });
                     },
                     restartSerialPort: function() {
+                      event.preventDefault();
+                      event.stopPropagation();
                       MeteoConfig.send('client:restart_port');
                     }
                   };
-                  //MeteoConfig.send('client:admin_in');
+                  var listeners = [
+                        $scope.$on('server:data', function(event, data) {
+                          if(data.message === 'Arquitectura Avanzada') {
+                            $scope.config.report = {
+                              message:'OK - ' + $filter('date')(Date.now(), 'dd/MM/yyyy HH:mm:ss'),
+                              status: 'OK'
+                            };
+                          }
+                        }),
+                        $scope.$on('server:set_config', function(event, config) {
+                          $scope.config.serverConfig = _.merge($scope.config.serverConfig, config);
+                        }),
+                        $scope.$on('server:lights', function(event, status) {
+                          $scope.config.serverConfig.estacion.luces.on = status;
+                        }),
+                        $scope.$on('restart_port_done', function(event, data) {
+                          $scope.config.serialPortStatus = data;
+                        }),
+                        $scope.$watch('config.serverConfig.estacion.luces.manual', function() {
+                          MeteoConfig.send('client:set_config_silent', {
+                            estacion: {
+                              luces: {
+                                on: $scope.config.serverConfig.estacion.luces.on,
+                                manual: $scope.config.serverConfig.estacion.luces.manual,
+                                start: new Date($scope.config.serverConfig.estacion.luces.start),
+                                stop: new Date($scope.config.serverConfig.estacion.luces.stop)
+                              }
+                            }
+                          });
+                        }),
+                        $scope.$watch('config.serverConfig.estacion.luces.on', function() {
+                          MeteoConfig.send('client:lights', $scope.config.serverConfig.estacion.luces.on);
+                        })
+                      ];
                   $scope.$on('destroy', function() {
-                    //MeteoConfig.send('client:admin_out');
-                    $interval.cancel(intervalId);
+                    _.each(listeners, function(listener) {
+                      listener.call(null);
+                    });
                   });
-
-                  $scope.$on('server:data', function(event, data) {
-                    if(data.message === '\rArquitectura Avanzada') {
-                      $scope.config.report = {
-                        message:'OK - ' + $filter('date')(Date.now(), 'dd/MM/yyyy HH:mm:ss'),
-                        status: 'OK'
-                      };
-                    }
-                  });
-                  $scope.$on('restart_port_done', function(event, data) {
-                    $scope.config.serialPortStatus = data;
-                  });
-
-                  var intervalId = $interval(function() {
-                    MeteoConfig.send('client:iden');
-                  }, 20000);
                 }
               });
             }
@@ -118,7 +146,6 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
             url: "/login",
             templateUrl: "partials/login.html",
             controller: function($scope, $state, MeteoConfig, $mdToast) {
-              //MeteoConfig.send('client:admin_out');
               $scope.config = {
                 user: {
                   login: {
@@ -183,14 +210,15 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
             url: "/",
             templateUrl: "partials/client.html",
             controller: function($scope, MeteoConfig) {
-              //MeteoConfig.send('client:admin_out');
               $scope.config = MeteoConfig.config();
               $scope.config.enableDownload = false;
+              $scope.config.selected = null;
               $scope.filter = {
                 desde: new Date(),
                 hasta: new Date(),
                 data: null
               };
+
               var listeners = [
                   $scope.$on('server:data', function(event, message) {
                     if(message.data && message.data.temperatura){
@@ -214,26 +242,24 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                     console.log(message);
                   }),
                   $scope.$watch('config.realtime', function(newValue, oldValue) {
-                  if(newValue && $scope.config.selected) {
-                    $scope.config.chart.series.length = 0;
-                    $scope.config.chart.title.text = $scope.config.selected.description;
-                    $scope.config.chart.series.push($scope.config.selected.series);
-                  } else {
-                    $scope.methods.searchWithFilter();
-                  }
-                }),
-                  $scope.$watch('config.chart.series', function() {
-                    if($scope.config.chart.series[0] && $scope.config.chart.series[0].length > 0) {
-                      $scope.config.enableDownload = true;
+                    if(newValue && $scope.config.selected) {
+                      $scope.config.chart.series.length = 0;
+                      $scope.config.chart.title.text = $scope.config.selected.description;
+                      $scope.config.chart.series.push($scope.config.selected.series);
                     } else {
-                      $scope.config.enableDownload = false;
+                      $scope.methods.searchWithFilter();
                     }
+                  }),
+                  $scope.$watch('config.chart.series', function() {
+                    $scope.config.enableDownload = $scope.config.chart.series[0] && $scope.config.chart.series[0].length > 0;
                   }, true)
               ];
+
               $scope.$on('destroy', function() {
                 _.each(listeners, function(listener) {
                   listener.call(null);
                 });
+                $scope.config.selected = null;
               });
 
               $scope.methods = {

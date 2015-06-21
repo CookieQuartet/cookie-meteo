@@ -8,68 +8,73 @@ var app = new Parse({
 });
 
 var ServerConfig = function(mailer) {
-  var self = this,
+  var firstTime = true,
       config = {
         id: 'configObject',
         interval: 60, // un minuto
         mailAlarm: 'mmaestri@gmail.com',
         sendAlarms: true,
+        port: '/dev/tty.wchusbserial1410',
         estacion: {
-          sensores: {
-            temperatura: {
-              active: true,
-              alarmIncluded: true,
-              units: 'ºC',
-              channel: 0,
-              thresholds: {
-                max: 50,
-                min: 0
+          "sensores": {
+            "temperatura": {
+              "active": true,
+              "alarmIncluded": true,
+              "channel": 0,
+              "id": "temperatura",
+              "thresholds": {
+                "max": 50,
+                "min": 0
               },
-              transfer: {
-                a: 0,
-                b: 51.28,
-                c: -20.5128
-              }
+              "transfer": {
+                "a": 0,
+                "b": 51.28,
+                "c": -20.51
+              },
+              "units": "ºC"
             },
-            viento: {
-              active: true,
-              alarmIncluded: true,
-              units: 'km/h',
-              channel: 1,
-              thresholds: {
-                max: 216,
-                min: 1.08
+            "viento": {
+              "active": true,
+              "alarmIncluded": true,
+              "channel": 1,
+              "id": "viento",
+              "thresholds": {
+                "max": 216,
+                "min": 1.08
               },
-              transfer: {
-                a: 0,
-                b: 17.784,
-                c: 0.828
-              }
+              "transfer": {
+                "a": 0,
+                "b": 17.784,
+                "c": 0.828
+              },
+              "units": "km/h"
             },
-            humedad: {
-              active: true,
-              alarmIncluded: true,
-              units: '%',
-              channel: 2,
-              thresholds: {
-                max: 50,
-                min: 0
+            "humedad": {
+              "active": true,
+              "alarmIncluded": true,
+              "channel": 2,
+              "id": "humedad",
+              "thresholds": {
+                "max": 50,
+                "min": 0
               },
-              transfer: {
-                a: 0,
-                b: 1,
-                c: 0.5
-              }
+              "transfer": {
+                "a": 0,
+                "b": 29.411,
+                "c": -22.058
+              },
+              "units": "%"
             }
           },
-          alarmas: {
-            openDoor: false,
-            lowBattery: false
+          "alarmas": {
+            "lowBattery": true,
+            "openDoor": true
           },
-          luces: {
-            on: true,
-            start: null,
-            stop: null
+          "luces": {
+            "on": true,
+            "manual": false,
+            "start": "1970-01-01T21:00:00.000Z",
+            "stop": "1970-01-01T11:00:00.000Z"
           }
         }
       };
@@ -114,8 +119,9 @@ var ServerConfig = function(mailer) {
       if(!err) {
         app.update('Config', response.objectId, config, function (err, response) {
           if(!err) {
-            console.log('Objeto de configuración actualizado correctamente', response);
             defer.resolve(response);
+            config = _.merge(config, response);
+            firstTime = false;
           }
         });
       }
@@ -138,85 +144,103 @@ var ServerConfig = function(mailer) {
   };
   // devuelve la configuracion
   this.config = function() {
-    return _.clone(config);
+    if(firstTime) {
+      return result;
+    } else {
+      var defer = Q.defer();
+      defer.resolve(_.clone(config));
+      return defer.promise;
+    }
   };
 
   this.sendMail = function(alarms) {
     var destination = config.mailAlarm,
         subject = 'Estación metereológica - Alarmas',
-        content = JSON.stringify(alarms);
+        template = 'Estación metereológica\n' +
+            '<% _.each(alarms, function(item) { %>' +
+            '<%=item.date%> : <%=item.message%><%="|"%>' +
+            '<% }); %>',
+        compiled = _.template(template),
+        content = compiled({ alarms: alarms }).replace(/\|/g, '\n');
 
-    //mailer.sendEmail(destination, subject, content);
+    mailer.sendEmail(destination, subject, content);
   };
   // inicializacion
-  this.init().then(function() {
+  var result = this.init();
+  result.then(function() {
     /*
     self.setConfig({
       id: 'configObject',
       interval: 60, // un minuto
       mailAlarm: 'mmaestri@gmail.com',
       sendAlarms: true,
+      port: '/dev/tty.wchusbserial1410',
       estacion: {
-        sensores: {
-          temperatura: {
-            active: true,
-            alarmIncluded: true,
-            units: 'ºC',
-            channel: 0,
-            thresholds: {
-              max: 50,
-              min: 0
+        "sensores": {
+          "temperatura": {
+            "active": true,
+            "alarmIncluded": true,
+            "channel": 0,
+            "id": "temperatura",
+            "thresholds": {
+              "max": 50,
+              "min": 0
             },
-            transfer: {
-              a: 0,
-              b: 51.28,
-              c: -20.5128
-            }
+            "transfer": {
+              "a": 0,
+              "b": 51.28,
+              "c": -20.51
+            },
+            "units": "ºC"
           },
-          viento: {
-            active: true,
-            alarmIncluded: true,
-            units: 'km/h',
-            channel: 1,
-            thresholds: {
-              max: 216,
-              min: 1.08
+          "viento": {
+            "active": true,
+            "alarmIncluded": true,
+            "channel": 1,
+            "id": "viento",
+            "thresholds": {
+              "max": 216,
+              "min": 1.08
             },
-            transfer: {
-              a: 0,
-              b: 17.784,
-              c: 0.828
-            }
+            "transfer": {
+              "a": 0,
+              "b": 17.784,
+              "c": 0.828
+            },
+            "units": "km/h"
           },
-          humedad: {
-            active: true,
-            alarmIncluded: true,
-            units: '%',
-            channel: 2,
-            thresholds: {
-              max: 50,
-              min: 0
+          "humedad": {
+            "active": true,
+            "alarmIncluded": true,
+            "channel": 2,
+            "id": "humedad",
+            "thresholds": {
+              "max": 50,
+              "min": 0
             },
-            transfer: {
-              a: 0,
-              b: 1,
-              c: 0.5
-            }
+            "transfer": {
+              "a": 0,
+              "b": 29.411,
+              "c": -22.058
+            },
+            "units": "%"
           }
         },
-        alarmas: {
-          openDoor: false,
-          lowBattery: false
+        "alarmas": {
+          "lowBattery": true,
+          "openDoor": true
         },
-        luces: {
-          on: true,
-          start: null,
-          stop: null
+        "luces": {
+          "on": true,
+          "manual": false,
+          "start": "1970-01-01T21:00:00.000Z",
+          "stop": "1970-01-01T11:00:00.000Z"
         }
       }
     });
     */
   });
+  return this;
 };
 
 module.exports = ServerConfig;

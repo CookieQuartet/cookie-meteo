@@ -16,6 +16,8 @@
     "path": "^0.11.14",
     "q": "^1.4.1",
     "serialport": "^1.7.1",
-    "socket.io": "^1.3.5"
+    "socket.io": "^1.3.5",
+    "datejs": "^1.0.0-rc3",
+    "node-schedule": "^0.2.9"
   }
 }

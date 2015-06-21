@@ -139,7 +139,6 @@ angular.module('CookieMeteoServices', [])
               $socket.emit(event, data);
             },
             request: function() {
-              //$socket.emit('client:request', { command: 'RDAS' });
               $socket.emit('client:requestData');
             },
             checkLogged: function(token) {
@@ -149,7 +148,6 @@ angular.module('CookieMeteoServices', [])
             },
             startAcq: function(status) {
               $socket.emit('client:start_acq');
-              $socket.emit('client:request', { command: 'RDAS' });
             },
             stopAcq: function(status) {
               $socket.emit('client:stop_acq');
@@ -158,6 +156,10 @@ angular.module('CookieMeteoServices', [])
       // el cliente recibe alarmas del servidor
       $socket.on('server:alarm', function (data) {
         $rootScope.$broadcast('server:alarm', data);
+      });
+      // el cliente recibe estado de las luces
+      $socket.on('server:lights', function(status) {
+        $rootScope.$broadcast('server:lights', status);
       });
       // el cliente recibe datos del servidor
       $socket.on('server:data', function (data) {
@@ -173,6 +175,7 @@ angular.module('CookieMeteoServices', [])
             data.estacion.luces.stop = new Date(data.estacion.luces.stop);
           }
           exportConfig.serverConfig = data;
+          $rootScope.$broadcast('server:set_config', data);
           defer.resolve(exportConfig);
         } else  {
           defer.resolve(false);
@@ -211,7 +214,6 @@ angular.module('CookieMeteoServices', [])
       $socket.emit('client:get_config');
       // solicitar el estado de la adquisicion
       $socket.emit('client:get_acq_status');
-      // solicitar datos iniciales
-      $socket.emit('client:request', { command: 'RDAS' });
+
       return service;
   });

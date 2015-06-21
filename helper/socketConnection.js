@@ -1,138 +1,171 @@
+require('datejs');
+Date.i18n.setLanguage('es-AR');
+
 var Parse = require('./parse');
 var _ = require('lodash');
 var Q = require('q');
 
+var SerialDispatcher = require('./serialDispatcher');
+var ServerConfig = require('./serverConfig');
+var LightScheduler = require('./lightScheduler');
+
+//-----------------------------------------------------------------------------------------
+// mailer
+var mailer = require('./emailService');
+//-----------------------------------------------------------------------------------------
+// manager de configuracion
+var serverConfig = new ServerConfig(mailer);
+//-----------------------------------------------------------------------------------------
+// manager de acceso al puerto serie
+var sDispatcher = new SerialDispatcher(serverConfig);
+//-----------------------------------------------------------------------------------------
 var app = new Parse({
   app_id:"iHBoW7NiugHfz1TBYimBbCuVgaNLiu2ojq8uqIBH",
   api_key: "utg0CdEubwtz0m2meWqPRnh1nOnyMBFVMGG3aoNN"
 });
-
-function SocketConnection(io){
-  //var serialPort = require('./serialPort');
-  var SerialDispatcher = require('./serialDispatcher');
-  var ServerConfig = require('./serverConfig');
-  var Timer = require('./timer');
-
-  // mailer
-  var mailer = require('./emailService');
-  // manager de configuracion
-  var serverConfig = new ServerConfig(mailer);
-  // manager de acceso al puerto serie
-  var sDispatcher = new SerialDispatcher(serverConfig);
-  // polling para el subsistema de alarmas
-  var polling = 30;
-  // adquisidor de datos
-  var timer = new Timer(serverConfig.config().interval, function() {
-    sDispatcher.addRequest(null, { command: 'RDAS' });
-    sDispatcher.wakeUp();
-  });
-  // gestor de alarmas
-  var alarmManager = new Timer(polling, function() {
-    sDispatcher.addRequest(null, { command: 'RDDI' });
-    sDispatcher.wakeUp();
-  });
-  alarmManager.start();
-  // callback/promesa para guardar en Parse la adquisicion de datos
-  sDispatcher.setCallback(function(data) {
-    var defer = Q.defer();
-    app.insert('Sensores', data, function(err, response) {
-      defer.resolve(response);
+//-----------------------------------------------------------------------------------------
+function SocketConnection(io) {
+  serverConfig.config().then(function(config) {
+    //-----------------------------------------------------------------------------------------
+    // callback/promesa para guardar en Parse la adquisicion de datos
+    sDispatcher.setCallback(function(data) {
+      var defer = Q.defer();
+      app.insert('Sensores', data, function(err, response) {
+        defer.resolve(response);
+      });
+      return defer.promise;
     });
-    return defer.promise;
-  });
-
-  io.on('connection', function (socket) {
-    // se agrega el socket al dispatcher para que lo tenga en cuenta al momento de enviar datos
-    sDispatcher.connHandler.addSocket(socket);
-
-    // start de adquisicion de datos
-    socket.on('client:start_acq', function(){
-      timer.start();
-      socket.emit('server:set_acq_status', timer.running());
-    });
-    // stop de adquisicion de datos
-    socket.on('client:stop_acq', function(){
-      timer.stop();
-      socket.emit('server:set_acq_status', timer.running());
-    });
-    // estado de la adquisicion
-    socket.on('client:get_acq_status', function(){
-      socket.emit('server:set_acq_status', timer.running());
-    });
-    // configurar intervalo de adquisicion
-    socket.on('client:set_acq_interval', function(config){
-      serverConfig.setConfig(config).then(function(config) {
-        timer
-          .setInterval(config.interval)
-          .stop()
-          .start();
-        console.info('El período de muestreo fue cambiado a ', config.interval);
+    //-----------------------------------------------------------------------------------------
+    // inicializar el dispatcher
+    sDispatcher.init();
+    //-----------------------------------------------------------------------------------------
+    // scheduler de luces
+    var scheduler = new LightScheduler(config, sDispatcher);
+    //-----------------------------------------------------------------------------------------
+    io.on('connection', function (socket) {
+      //-----------------------------------------------------------------------------------------
+      // se agrega el socket al dispatcher para que lo tenga en cuenta al momento de enviar datos
+      sDispatcher.connHandler.addSocket(socket);
+      //-----------------------------------------------------------------------------------------
+      // estado de la adquisicion
+      socket.emit('server:set_acq_status', sDispatcher.running());
+      //-----------------------------------------------------------------------------------------
+      // start de adquisicion de datos
+      socket.on('client:start_acq', function(){
+        sDispatcher.startAdq();
+      });
+      //-----------------------------------------------------------------------------------------
+      // stop de adquisicion de datos
+      socket.on('client:stop_acq', function(){
+        sDispatcher.stopAdq();
+      });
+      //-----------------------------------------------------------------------------------------
+      // estado de la adquisicion
+      socket.on('client:get_acq_status', function(){
+        socket.emit('server:set_acq_status', sDispatcher.running());
+      });
+      //-----------------------------------------------------------------------------------------
+      // configurar intervalo de adquisicion
+      socket.on('client:set_acq_interval', function(config){
+        var running = sDispatcher.running();
+        if(running) {
+          sDispatcher.stopAdq();
+        }
+        serverConfig.setConfig(config).then(function(config) {
+          if(running) {
+            sDispatcher.startAdq();
+          }
+          console.info((new Date).toString('yyyy/MM/dd HH:mm:ss') + ' --- El período de muestreo fue cambiado a ', config.interval);
+          socket.emit('server:set_config', config);
+          socket.emit('server:set_config_done');
+        });
+      });
+      //-----------------------------------------------------------------------------------------
+      // un cliente quiere ejecutar un comando sobre la placa
+      socket.on('client:request', function (request) {
+        sDispatcher.addRequest(socket, request);
+      });
+      //-----------------------------------------------------------------------------------------
+      // un cliente pide identificacion
+      socket.on('client:iden', function () {
+        sDispatcher.iden(socket);
+      });
+      //-----------------------------------------------------------------------------------------
+      // un cliente pide datos
+      socket.on('client:requestData', function (request) {
+        //sDispatcher.addRequest(socket, { command: 'RDAS' });
+      });
+      //-----------------------------------------------------------------------------------------
+      // pedido de configuracion de un cliente
+      socket.on('client:get_config', function () {
         socket.emit('server:set_config', config);
-        socket.emit('server:set_config_done');
       });
-    });
-    // un cliente quiere ejecutar un comando sobre la placa
-    socket.on('client:request', function (request) {
-      sDispatcher.addRequest(socket, request);
-      sDispatcher.wakeUp();
-    });
-    // un cliente pide identificacion
-    socket.on('client:iden', function (request) {
-      sDispatcher.addRequest(socket, { command: 'IDEN' });
-      sDispatcher.wakeUp();
-    });
-    // un cliente pide datos
-    socket.on('client:requestData', function (request) {
-      sDispatcher.addRequest(socket, { command: 'RDAS' });
-      sDispatcher.wakeUp();
-    });
-    // pedido de configuracion de un cliente
-    socket.on('client:get_config', function (config) {
-      socket.emit('server:set_config', serverConfig.config());
-    });
-    // un cliente quiere modificar la configuracion
-    socket.on('client:set_config', function (config) {
-      serverConfig.setConfig(config).then(function(config) {
-        socket.emit('server:set_config', config);
-        socket.emit('server:set_config_done');
+      //-----------------------------------------------------------------------------------------
+      // un cliente quiere modificar la configuracion
+      socket.on('client:set_config', function (config) {
+        serverConfig.setConfig(config).then(function(_config) {
+          // se modificaron parametros de las luces
+          if(config.estacion && config.estacion.luces) {
+            scheduler.update(_config);
+          }
+          //socket.emit('server:set_config', _config);
+          sDispatcher.connHandler.broadcast({ type: 'server:set_config', data: _config });
+          socket.emit('server:set_config_done');
+        });
       });
-    });
-    // un cliente chequea si esta logueado
-    socket.on('client:checkLogged', function(event) {
-      serverConfig.checkLogged(event.token, function(response) {
-        socket.emit('server:checkLogged', response);
+      //-----------------------------------------------------------------------------------------
+      // un cliente quiere modificar la configuracion sin hacer mucho ruido
+      socket.on('client:set_config_silent', function (config) {
+        serverConfig.setConfig(config).then(function(_config) {
+          // se modificaron parametros de las luces
+          if(config.estacion && config.estacion.luces) {
+            scheduler.update(_config);
+          }
+          sDispatcher.connHandler.broadcast({ type: 'server:set_config', data: _config });
+        });
       });
-    });
-    // un cliente quiere iniciar sesion
-    socket.on('client:login', function (login) {
-      serverConfig.login(login, function(response) {
-        socket.emit('server:login', response);
+      //-----------------------------------------------------------------------------------------
+      // un cliente chequea si esta logueado
+      socket.on('client:checkLogged', function(event) {
+        serverConfig.checkLogged(event.token, function(response) {
+          socket.emit('server:checkLogged', response);
+        });
       });
-    });
-    // un cliente cierra sesion
-    socket.on('client:logout', function (logout) {
-      serverConfig.logout(logout.token, function(response) {
-        socket.emit('server:logout', response);
+      //-----------------------------------------------------------------------------------------
+      // un cliente quiere iniciar sesion
+      socket.on('client:login', function (login) {
+        serverConfig.login(login, function(response) {
+          socket.emit('server:login', response);
+        });
       });
-    });
-    // un cliente solicita el reinicio del puerto serie
-    socket.on('client:restart_port', function () {
-      sDispatcher.restart().then(function(data) {
-        socket.emit('server:set_restart_port_done', data);
+      //-----------------------------------------------------------------------------------------
+      // un cliente cierra sesion
+      socket.on('client:logout', function (logout) {
+        serverConfig.logout(logout.token, function(response) {
+          socket.emit('server:logout', response);
+        });
       });
-    });
-    /*
-    // un admin entra a settings
-    socket.on('client:admin_in', function() {
-      idenManager.setSocket(socket).start();
-    });
-    // un admin sale de settings
-    socket.on('client:admin_out', function() {
-      idenManager.stop().setSocket(null);
-    });*/
-    // un cliente se desconecta
-    socket.on('disconnect', function () {
-      sDispatcher.connHandler.removeSocket(socket.id);
+      //-----------------------------------------------------------------------------------------
+      // un cliente solicita el reinicio del puerto serie
+      socket.on('client:restart_port', function () {
+        sDispatcher.restart();
+        socket.emit('server:set_restart_port_done');
+      });
+      //-----------------------------------------------------------------------------------------
+      // encendido de luces
+      socket.on('client:lights', function(status) {
+        if(status) {
+          sDispatcher.turnOn();
+        } else  {
+          sDispatcher.turnOff();
+        }
+      });
+      //-----------------------------------------------------------------------------------------
+      // un cliente se desconecta
+      socket.on('disconnect', function () {
+        sDispatcher.connHandler.removeSocket(socket.id);
+      });
+      //-----------------------------------------------------------------------------------------
     });
   });
 }

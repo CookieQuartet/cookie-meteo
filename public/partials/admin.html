@@ -4,7 +4,7 @@
         <md-whiteframe
                 ng-if="isAdmin"
                 class="md-whiteframe-z1"
-                style="margin:0 !important; padding:0 2px;"
+                style="margin:0 0 350px 0 !important; padding:0 2px;"
                 layout-sm="row"
                 flex="90"
                 flex-sm="90"
@@ -19,7 +19,7 @@
                 </md-subheader>
                 <md-list-item style="height: 69px; padding: 0 16px;margin-top: 4px;background-color: aliceblue;">
                     <md-icon style="padding-left: 20px;margin-right: 48px;" md-svg-icon="material-design-icons/hardware/svg/production/ic_memory_24px.svg" class="cmi-name"></md-icon>
-                    <p> Reporte de estado de la estación metereológica </p>
+                    <p> Estado de la estación metereológica </p>
                     <div
                         ng-class="{
                             'cmi-port-error': config.report.status === 'ERROR',
@@ -31,19 +31,42 @@
                         <md-tooltip>Actualizar estado</md-tooltip>
                     </md-button>
                 </md-list-item>
+
                 <md-divider></md-divider>
                 <md-list-item style="height: 69px; padding: 0 16px;margin-top: 4px;background-color: aliceblue;">
                     <md-icon style="padding-left: 20px;margin-right: 48px;" md-svg-icon="material-design-icons/hardware/svg/production/ic_memory_24px.svg" class="cmi-name"></md-icon>
-                    <p> Reiniciar la interface RS232 </p>
-                    <div
-                        ng-class="{
-                            'cmi-port-error': config.serialPortStatus.status === 'ERROR',
-                            'cmi-port-ok': config.serialPortStatus.status === 'OK'
-                        }"
-                        style="margin-left:10px;float: right;text-align: right;"> {{ config.serialPortStatus.message }} </div>
+                    <p flex="20"> Interface RS232 </p>
+                    <div flex="54">
+                        <select name="serial-port-address" id="serial-port-address" ng-model="config.serverConfig.port">
+                            <optgroup label="Mac OSX - Linux - Unix">
+                                <option value="/dev/tty.wchusbserial1410">/dev/tty.wchusbserial1410</option>
+                                <option value="/dev/tty.wchusbserial14550">/dev/tty.wchusbserial14550</option>
+                            </optgroup>
+                            <optgroup label="Windows">
+                                <option value="COM1">COM1</option>
+                                <option value="COM2">COM2</option>
+                                <option value="COM3">COM3</option>
+                                <option value="COM4">COM4</option>
+                                <option value="COM5">COM5</option>
+                                <option value="COM6">COM6</option>
+                                <option value="COM7">COM7</option>
+                                <option value="COM8">COM8</option>
+                                <option value="COM9">COM9</option>
+                                <option value="COM10">COM10</option>
+                                <option value="COM11">COM11</option>
+                                <option value="COM12">COM12</option>
+                                <option value="COM13">COM13</option>
+                                <option value="COM14">COM14</option>
+                            </optgroup>
+                        </select>
+                    </div>
                     <md-button class="md-fab md-mini md-primary" aria-label="Guardar cambios" ng-click="methods.restartSerialPort()">
                         <md-icon md-svg-src="./material-design-icons/action/svg/production/ic_autorenew_24px.svg"></md-icon>
                         <md-tooltip>Reiniciar puerto</md-tooltip>
+                    </md-button>
+                    <md-button class="md-fab md-mini md-primary" aria-label="Guardar cambios" ng-click="methods.updatePort()">
+                        <md-icon md-svg-src="./material-design-icons/content/svg/production/ic_save_24px.svg"></md-icon>
+                        <md-tooltip>Guardar cambios</md-tooltip>
                     </md-button>
                 </md-list-item>
                 <md-divider></md-divider>
@@ -62,24 +85,33 @@
                 <md-list-item >
                     <div class="md-no-style md-list-item-inner">
                         <md-icon md-svg-icon="material-design-icons/image/svg/production/ic_wb_incandescent_24px.svg" class="cmi-icon-mini-mini cmi-icon-sub"></md-icon>
-                        <p style="padding-left: 12px;"> Encendido manual </p>
-                        <md-switch class="md-primary" ng-model="config.serverConfig.estacion.luces.on"></md-switch>
+                        <p style="padding-left: 12px;"> Estado de las luces: {{ config.serverConfig.estacion.luces.on ? 'encendido' : 'apagado'}}</p>
+                        <md-switch ng-disabled="!config.serverConfig.estacion.luces.manual" class="md-primary" ng-model="config.serverConfig.estacion.luces.on"></md-switch>
                     </div>
                 </md-list-item>
                 <md-list-item >
                     <div class="md-no-style md-list-item-inner">
-                        <md-icon md-svg-icon="material-design-icons/action/svg/production/ic_alarm_24px.svg" class="cmi-icon-mini-mini cmi-icon-sub"></md-icon>
-                        <p style="padding-left: 12px;"> Horario de encendido (automático) </p>
-                        <input class="cmi-input-threshold" type="time" ng-model="config.serverConfig.estacion.luces.start"/>
+                        <md-icon md-svg-icon="material-design-icons/image/svg/production/ic_wb_incandescent_24px.svg" class="cmi-icon-mini-mini cmi-icon-sub"></md-icon>
+                        <p style="padding-left: 12px;"> Control manual </p>
+                        <md-switch class="md-primary" ng-model="config.serverConfig.estacion.luces.manual"></md-switch>
                     </div>
                 </md-list-item>
-                <md-list-item >
-                    <div class="md-no-style md-list-item-inner">
-                        <md-icon md-svg-icon="material-design-icons/action/svg/production/ic_alarm_24px.svg" class="cmi-icon-mini-mini cmi-icon-sub"></md-icon>
-                        <p style="padding-left: 12px;"> Horario de apagado (automático) </p>
-                        <input class="cmi-input-threshold" type="time" ng-model="config.serverConfig.estacion.luces.stop"/>
-                    </div>
-                </md-list-item>
+                <md-list ng-if="!config.serverConfig.estacion.luces.manual">
+                    <md-list-item >
+                        <div class="md-no-style md-list-item-inner">
+                            <md-icon md-svg-icon="material-design-icons/action/svg/production/ic_alarm_24px.svg" class="cmi-icon-mini-mini cmi-icon-sub"></md-icon>
+                            <p style="padding-left: 12px;"> Horario de encendido (automático) </p>
+                            <input class="cmi-input-threshold" type="time" ng-model="config.serverConfig.estacion.luces.start"/>
+                        </div>
+                    </md-list-item>
+                    <md-list-item >
+                        <div class="md-no-style md-list-item-inner">
+                            <md-icon md-svg-icon="material-design-icons/action/svg/production/ic_alarm_24px.svg" class="cmi-icon-mini-mini cmi-icon-sub"></md-icon>
+                            <p style="padding-left: 12px;"> Horario de apagado (automático) </p>
+                            <input class="cmi-input-threshold" type="time" ng-model="config.serverConfig.estacion.luces.stop"/>
+                        </div>
+                    </md-list-item>
+                </md-list>
                 <md-divider></md-divider>
                 <md-subheader class="md-no-sticky">
                     <span>Alarmas</span>
@@ -119,7 +151,7 @@
                     <div class="md-no-style md-list-item-inner">
                         <md-icon style="padding-left:2px; padding-right: 18px;" md-svg-icon="material-design-icons/image/svg/production/ic_timer_24px.svg" class="cmi-name"></md-icon>
                         <p> Tiempo entre muestras (> 20 seg)</p>
-                        <input class="cmi-input-sample" type="number" min="20" ng-model="config.serverConfig.interval"/>
+                        <input class="cmi-input-sample" type="number" min="5" ng-model="config.serverConfig.interval"/>
                         <span style="margin-right:8px;">segundos</span>
                         <md-button class="md-fab md-mini md-primary" aria-label="Actualizar tiempo de muestreo" ng-click="methods.updateSampleTime()">
                             <md-icon md-svg-src="./material-design-icons/content/svg/production/ic_save_24px.svg"></md-icon>
