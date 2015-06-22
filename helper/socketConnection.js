@@ -45,7 +45,7 @@ function SocketConnection(io) {
     io.on('connection', function (socket) {
       //-----------------------------------------------------------------------------------------
       // se agrega el socket al dispatcher para que lo tenga en cuenta al momento de enviar datos
-      sDispatcher.connHandler.addSocket(socket);
+      sDispatcher.addSocket(socket);
       //-----------------------------------------------------------------------------------------
       // estado de la adquisicion
       socket.emit('server:set_acq_status', sDispatcher.running());
@@ -81,19 +81,9 @@ function SocketConnection(io) {
         });
       });
       //-----------------------------------------------------------------------------------------
-      // un cliente quiere ejecutar un comando sobre la placa
-      socket.on('client:request', function (request) {
-        sDispatcher.addRequest(socket, request);
-      });
-      //-----------------------------------------------------------------------------------------
       // un cliente pide identificacion
       socket.on('client:iden', function () {
         sDispatcher.iden(socket);
-      });
-      //-----------------------------------------------------------------------------------------
-      // un cliente pide datos
-      socket.on('client:requestData', function (request) {
-        //sDispatcher.addRequest(socket, { command: 'RDAS' });
       });
       //-----------------------------------------------------------------------------------------
       // pedido de configuracion de un cliente
@@ -104,12 +94,13 @@ function SocketConnection(io) {
       // un cliente quiere modificar la configuracion
       socket.on('client:set_config', function (config) {
         serverConfig.setConfig(config).then(function(_config) {
-          // se modificaron parametros de las luces
+          // se modificaron parametros de las luces?
           if(config.estacion && config.estacion.luces) {
             scheduler.update(_config);
           }
-          //socket.emit('server:set_config', _config);
-          sDispatcher.connHandler.broadcast({ type: 'server:set_config', data: _config });
+          // comunico los cambios a todas las instancias
+          sDispatcher.broadcast({ type: 'server:set_config', data: _config });
+          // aviso al cliente que se hizo la modificacion
           socket.emit('server:set_config_done');
         });
       });
@@ -117,11 +108,11 @@ function SocketConnection(io) {
       // un cliente quiere modificar la configuracion sin hacer mucho ruido
       socket.on('client:set_config_silent', function (config) {
         serverConfig.setConfig(config).then(function(_config) {
-          // se modificaron parametros de las luces
+          // se modificaron parametros de las luces ?
           if(config.estacion && config.estacion.luces) {
             scheduler.update(_config);
           }
-          sDispatcher.connHandler.broadcast({ type: 'server:set_config', data: _config });
+          sDispatcher.broadcast({ type: 'server:set_config', data: _config });
         });
       });
       //-----------------------------------------------------------------------------------------
@@ -163,7 +154,7 @@ function SocketConnection(io) {
       //-----------------------------------------------------------------------------------------
       // un cliente se desconecta
       socket.on('disconnect', function () {
-        sDispatcher.connHandler.removeSocket(socket.id);
+        sDispatcher.removeSocket(socket.id);
       });
       //-----------------------------------------------------------------------------------------
     });

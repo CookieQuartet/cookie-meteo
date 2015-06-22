@@ -8,6 +8,11 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
       });
       Parse.initialize("iHBoW7NiugHfz1TBYimBbCuVgaNLiu2ojq8uqIBH", "F3oYWOs8MGa6Ct5osHiLleyxUt1WFi6FdKeuaY2k");
     }])
+    .config(function($mdThemingProvider) {
+      $mdThemingProvider.theme('default')
+          .primaryPalette('teal')
+          .accentPalette('orange');
+    })
     .config(function($stateProvider, $urlRouterProvider) {
       function checkLogged(scope, MeteoConfig, callback) {
         var username = localStorage.getItem('cookie-meteo-username') || null,
@@ -22,7 +27,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
           .state('admin', {
             url: "/admin",
             templateUrl: "partials/admin.html",
-            controller: function($scope, MeteoConfig, $state, $filter, $interval) {
+            controller: function($scope, MeteoConfig, $state, $filter, $rootScope) {
               checkLogged($scope, MeteoConfig, function(userData) {
                 if(!userData || userData.username !== 'admin') {
                   $state.go('client');
@@ -31,6 +36,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                   $scope.config = _.clone(MeteoConfig.config(), true);
                   $scope.config.report = null;
                   $scope.config.selected = null;
+                  $rootScope.progress = false;
                   $scope.config.serialPortStatus = null;
                   $scope.methods = {
                     logout: function() {
@@ -39,6 +45,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                     },
                     updateStatus: function() {
                       MeteoConfig.send('client:iden');
+                      $rootScope.progress = true;
                     },
                     updatePort: function() {
                       event.preventDefault();
@@ -46,6 +53,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                       MeteoConfig.send('client:set_config', {
                         port: $scope.config.serverConfig.port
                       });
+                      $rootScope.progress = true;
                     },
                     updateSampleTime: function() {
                       event.preventDefault();
@@ -53,6 +61,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                       MeteoConfig.send('client:set_acq_interval', {
                         interval: $scope.config.serverConfig.interval
                       });
+                      $rootScope.progress = true;
                     },
                     updateAlarms: function() {
                       event.preventDefault();
@@ -69,6 +78,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                       });
                     },
                     updateLights: function() {
+                      $rootScope.progress = true;
                       event.preventDefault();
                       event.stopPropagation();
                       MeteoConfig.send('client:set_config', {
@@ -92,6 +102,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                           sensores: patch
                         }
                       });
+                      $rootScope.progress = true;
                     },
                     restartSerialPort: function() {
                       event.preventDefault();
@@ -110,12 +121,28 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                         }),
                         $scope.$on('server:set_config', function(event, config) {
                           $scope.config.serverConfig = _.merge($scope.config.serverConfig, config);
+                          $rootScope.progress = false;
                         }),
                         $scope.$on('server:lights', function(event, status) {
                           $scope.config.serverConfig.estacion.luces.on = status;
                         }),
                         $scope.$on('restart_port_done', function(event, data) {
                           $scope.config.serialPortStatus = data;
+                        }),
+                        $scope.$watch('config.serverConfig.sendAlarms', function() {
+                          MeteoConfig.send('client:set_config_silent', {
+                            sendAlarms: $scope.config.serverConfig.sendAlarms
+                          });
+                        }),
+                        $scope.$watch('config.serverConfig.estacion.luces.on', function() {
+                          MeteoConfig.send('client:set_config_silent', {
+                            estacion: {
+                              luces: {
+                                on: $scope.config.serverConfig.estacion.luces.on
+                              }
+                            }
+                          });
+                          MeteoConfig.send('client:lights', $scope.config.serverConfig.estacion.luces.on);
                         }),
                         $scope.$watch('config.serverConfig.estacion.luces.manual', function() {
                           MeteoConfig.send('client:set_config_silent', {
@@ -129,8 +156,38 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                             }
                           });
                         }),
-                        $scope.$watch('config.serverConfig.estacion.luces.on', function() {
-                          MeteoConfig.send('client:lights', $scope.config.serverConfig.estacion.luces.on);
+                        $scope.$watch('config.serverConfig.estacion.sensores.temperatura.active', function() {
+                          MeteoConfig.send('client:set_config_silent', {
+                            estacion: {
+                              sensores: {
+                                temperatura: {
+                                  active: $scope.config.serverConfig.estacion.sensores.temperatura.active
+                                }
+                              }
+                            }
+                          });
+                        }),
+                        $scope.$watch('config.serverConfig.estacion.sensores.viento.active', function() {
+                          MeteoConfig.send('client:set_config_silent', {
+                            estacion: {
+                              sensores: {
+                                viento: {
+                                  active: $scope.config.serverConfig.estacion.sensores.viento.active
+                                }
+                              }
+                            }
+                          });
+                        }),
+                        $scope.$watch('config.serverConfig.estacion.sensores.humedad.active', function() {
+                          MeteoConfig.send('client:set_config_silent', {
+                            estacion: {
+                              sensores: {
+                                humedad: {
+                                  active: $scope.config.serverConfig.estacion.sensores.humedad.active
+                                }
+                              }
+                            }
+                          });
                         })
                       ];
                   $scope.$on('destroy', function() {
@@ -239,7 +296,7 @@ angular.module('CookieMeteo', ['ngMaterial', 'ui.router', 'highcharts-ng', 'ngSo
                       $scope.config.indicadores.humedad.value = message.data.humedad.value;
                       $scope.config.indicadores.humedad.series.data.push({x: (new Date(message.data.createdAt)).getTime(), y: message.data.humedad.value })
                     }
-                    console.log(message);
+                    //console.log(message);
                   }),
                   $scope.$watch('config.realtime', function(newValue, oldValue) {
                     if(newValue && $scope.config.selected) {

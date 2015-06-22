@@ -9,11 +9,21 @@ var transformData = require('./transformData');
 
 function SerialDispatcher(serverConfig) {
   var _self = this,
+      _serialPort = null,
+      _connHandler = new ConnHandler(),
       _callback = function() {},
+      _requests = [],
       _running = false,
       _samplesMaxErrorCount = 5,
-      _samplesTimeoutId;
+      _samplesTimeoutId,
+      _lastRequest = null;
 
+  function addGlobalRequest(request) {
+    _requests.push({ request: request });
+  }
+  function addRequest(socket, request) {
+    _requests.push({socket: socket, request: request });
+  }
   function ConnHandler() {
     this.sockets = {};
     this.selectedSocket = null;
@@ -35,31 +45,14 @@ function SerialDispatcher(serverConfig) {
       }
     }
   }
-  function processRawData(data) {
-    var defer = Q.defer();
-    serverConfig.config().then(function(sConfig) {
-      var values = _.chain(data.replace(/\r/g, '').split(';'))
-            .remove(function (item) { return item.length !== 0; })
-            .map(function (item) { return parseInt(item) })
-            .value(),
-          response = {},
-          sensores = sConfig.estacion.sensores;
-      _.each(sensores, function(sensor) {
-        response[sensor.id] = transformData(values[sensor.channel], sensor.transfer, sensor.thresholds)
-      });
-      processAlarms(values[3]);
-      defer.resolve(response);
-    });
-    return defer.promise;
-  }
   function convertInterval(interval) {
-        // segun esta expresado en los comandos, 1 seg = 100 unidades
+    // segun esta expresado en los comandos, 1 seg = 100 unidades
     var _interval = interval * 100,
-        // obtengo la representacion en string
+    // obtengo la representacion en string
         __interval = String(_interval),
-        // cuento la cantidad de caracteres
+    // cuento la cantidad de caracteres
         count = __interval.length,
-        // me fijo cuantos ceros me faltan
+    // me fijo cuantos ceros me faltan
         missing = 5 - count;
     // agrego los ceros que faltan
     for(var i = 0; i < missing; i++) {
@@ -67,55 +60,38 @@ function SerialDispatcher(serverConfig) {
     }
     return __interval;
   }
-  function samplingError() {
-    var date = (new Date).toString('yyyy/MM/dd HH:mm:ss');
-    console.log(date + ' --- Error de muestreo');
-    serverConfig.sendMail([{
-      type: 'SAMPLING_ERROR',
-      message: 'Error de muestreo',
-      date: date
-    }]);
-    // envio las alarmas a los clientes conectados
-    _self.connHandler.broadcast({
-      type: 'server:alarm',
-      data: {
-        type: 'SAMPLING_ERROR',
-        message: 'Error de muestreo'
-      }
-    });
-    _self.stopAdq();
-  }
-  function startTimeout() {
+  function init() {
+    var defer = Q.defer(),
+        sConfig = serverConfig;
+
     serverConfig.config().then(function(config) {
-      _samplesTimeoutId = setTimeout(samplingError, config.interval * 1000 * _samplesMaxErrorCount)
-    });
-  }
-  function stopTimeout() {
-    clearTimeout(_samplesTimeoutId);
-  }
-  function processData(data) {
-    stopTimeout();
-    // si se desconecto por mucho tiempo, queda desfasado. si estaba adquiriendo datos, lo detengo
-    if(!_running) {
-      _self.stopAdq();
-    }
-    processRawData(data).then(function(_data) {
-      // exportar la respuesta
-      _callback({
-        humedad: _data.humedad.value,
-        viento: _data.viento.value,
-        temperatura: _data.temperatura.value
-      }).then(function(response) {
-        _self.connHandler.broadcast({
-          type: 'server:data',
-          data: {
-            message: 'Datos obtenidos',
-            data: _.extend(_data, response)
-          }
-        });
+      _serialPort = SerialPortFactory(config.port, onDataCallback, null, sConfig);
+      _serialPort.on('open', function(){
+        // detener adquisicion si la placa estaba en eso
+        addGlobalRequest({ command: 'DETA' });
+        // incluir todos los canales analogicos
+        addGlobalRequest({ command: 'SCAN', params: '02'});
+        // incluir canales digitales
+        addGlobalRequest({ command: 'CLDIS', dont_wait: true });
+        // sincronizar las luces con la configuracion
+        if(!config.estacion.luces.on) {
+          addGlobalRequest({ command: 'WRDO', params: '3' });
+        }
+        // procesar los comandos
+        processQueue();
       });
-      startTimeout();
     });
+    return defer.promise;
+  }
+  function onDataCallback(data) {
+    if(data.indexOf(';') >= 0) {
+      // son datos para enviar a los clientes
+      processData(data);
+    } else {
+      // respuesta de un comando
+      processCommands(data);
+    }
+    processQueue();
   }
   function processAlarms(code) {
     serverConfig.config().then(function(sConfig) {
@@ -141,7 +117,7 @@ function SerialDispatcher(serverConfig) {
           // envio mail
           serverConfig.sendMail(alarms);
           // envio las alarmas a los clientes conectados
-          _self.connHandler.broadcast({
+          _connHandler.broadcast({
             type: 'server:alarm',
             data: {
               message: alarms
@@ -152,56 +128,125 @@ function SerialDispatcher(serverConfig) {
     });
   }
   function processCommands(data) {
-    _self.connHandler.emit({
+    _connHandler.emit({
       type: 'server:data',
       data: {
+        //request: _lastRequest,
         message: data
       }
     });
   }
+  function processData(data) {
+    stopTimeout();
+    // si se desconecto por mucho tiempo, queda desfasado. si estaba adquiriendo datos, lo detengo
+    if(!_running) {
+      _self.stopAdq();
+    }
+    processRawData(data).then(function(_data) {
+      // exportar la respuesta
+      _callback({
+        humedad: _data.humedad.value,
+        viento: _data.viento.value,
+        temperatura: _data.temperatura.value
+      }).then(function(response) {
+        _connHandler.broadcast({
+          type: 'server:data',
+          data: {
+            message: 'Datos obtenidos',
+            data: _.extend(_data, response)
+          }
+        });
+      });
+      startTimeout();
+    });
+  }
+  function processQueue() {
+    console.log((new Date).toString('yyyy/MM/dd HH:mm:ss') + ' --- pending ' + _requests.length + ' requests');
+    if(_requests.length > 0) {
+      processRequest(_requests.shift());
+    }
+  }
+  function processRawData(data) {
+    var defer = Q.defer();
+    serverConfig.config().then(function(sConfig) {
+      var values = _.chain(data.replace(/\r/g, '').split(';'))
+            .remove(function (item) { return item.length !== 0; })
+            .map(function (item) { return parseInt(item) })
+            .value(),
+          response = {},
+          sensores = sConfig.estacion.sensores;
+      _.each(sensores, function(sensor) {
+        response[sensor.id] = transformData(values[sensor.channel], sensor.transfer, sensor.thresholds)
+      });
+      processAlarms(values[3]);
+      defer.resolve(response);
+    });
+    return defer.promise;
+  }
+  function processRequest(requestItem) {
+    if(_serialPort && requestItem) {
+      var command = requestItem.request.command,
+          value = requestItem.request.params ? requestItem.request.params: '';
+      // guardar la referencia como ultimo request
+      _lastRequest = requestItem;
+      // si el origen es un socket, la respuesta debe ir a ese socket
+      _connHandler.selectedSocket = requestItem.socket ? requestItem.socket : null;
+      // enviar el comando a la interface serie
+      write(command + value + "\n").then(function(response) {
+        console.log((new Date).toString('yyyy/MM/dd HH:mm:ss') + ' --> Comando enviado: ' + command + value + ' (' + response.results + ' caracteres)');
+        // algunos comandos no tienen respuesta, por lo tanto no hay que esperarlos para continuar
+        if(requestItem.request.dont_wait) {
+          processQueue();
+        }
+      });
+    }
+  }
+  function samplingError() {
+    var date = (new Date).toString('yyyy/MM/dd HH:mm:ss');
+    console.log(date + ' --- Error de muestreo');
+    serverConfig.sendMail([{
+      type: 'SAMPLING_ERROR',
+      message: 'Error de muestreo',
+      date: date
+    }]);
+    // envio las alarmas a los clientes conectados
+    _connHandler.broadcast({
+      type: 'server:alarm',
+      data: {
+        type: 'SAMPLING_ERROR',
+        message: 'Error de muestreo'
+      }
+    });
+    _self.stopAdq();
+  }
+  function startTimeout() {
+    serverConfig.config().then(function(config) {
+      _samplesTimeoutId = setTimeout(samplingError, config.interval * 1000 * _samplesMaxErrorCount)
+    });
+  }
+  function stopTimeout() {
+    clearTimeout(_samplesTimeoutId);
+  }
   function write(message) {
     var defer = Q.defer();
-    _self._serialPort.write(message, function(err, results) {
-      _self._serialPort.drain(function() {
-        defer.resolve({ err: err, results: results });
+    if(!_serialPort.isOpen()) {
+      _serialPort.open(function() {
+        _serialPort.write(message, function(err, results) {
+          _serialPort.drain(function() {
+            defer.resolve({ err: err, results: results });
+          });
+        });
       });
-    });
-    return defer.promise;
-  }
-  function init() {
-    var defer = Q.defer();
-    serverConfig.config().then(function(config) {
-      _self._serialPort = SerialPortFactory(config.port, onDataCallback);
-      _self._serialPort.on('open', function(){
-        // detener adquisicion si la placa estaba en eso
-        _self.addGlobalRequest({ command: 'DETA' });
-        // incluir todos los canales analogicos
-        _self.addGlobalRequest({ command: 'SCAN', params: '02'});
-        // incluir canales digitales
-        _self.addGlobalRequest({ command: 'CLDIS', dont_wait: true });
-        // procesar los comandos
-        _self.processQueue();
-      });
-    });
-    return defer.promise;
-  }
-  function onDataCallback(data) {
-    if(data.indexOf(';') >= 0) {
-      // son datos para enviar a los clientes
-      processData(data);
-    } else if(data.replace(/\r/g, '').length === 1) {
-      // lectura de entradas digitales
-      processAlarms(parseInt(data.replace(/\r/g, '')));
     } else {
-      // respuesta de un comando
-      processCommands(data);
+      _serialPort.write(message, function(err, results) {
+        _serialPort.drain(function() {
+          defer.resolve({ err: err, results: results });
+        });
+      });
     }
-    _self.processQueue();
+    return defer.promise;
   }
 
-  this._serialPort = null;
-  this.connHandler = new ConnHandler();
-  this.requests = [];
   this.setCallback = function(callback) {
     if(typeof callback === 'function') {
       _callback = callback;
@@ -210,62 +255,34 @@ function SerialDispatcher(serverConfig) {
       _callback = function() {};
     }
   };
-  this.addRequest = function(socket, request) {
-    _self.requests.push({socket: socket, request: request });
-  };
-  this.addGlobalRequest = function(request) {
-    _self.requests.push({ request: request });
-  };
-  this.processRequest = function(requestItem) {
-    if(_self._serialPort && requestItem) {
-      var command = requestItem.request.command,
-          value = requestItem.request.params ? requestItem.request.params: '';
-      // si el origen es un socket, la respuesta debe ir a ese socket
-      _self.connHandler.selectedSocket = requestItem.socket ? requestItem.socket : null;
-      // enviar el comando a la interface serie
-      write(command + value + "\n").then(function(response) {
-        console.log((new Date).toString('yyyy/MM/dd HH:mm:ss') + ' --> Comando enviado: ' + command + value + ' (' + response.results + ' caracteres)');
-        // algunos comandos no tienen respuesta, por lo tanto no hay que esperarlos para continuar
-        if(requestItem.request.dont_wait) {
-          _self.processQueue();
-        }
-      });
-    }
-  };
-  this.processQueue = function() {
-    console.log((new Date).toString('yyyy/MM/dd HH:mm:ss') + ' --- pending ' + _self.requests.length + ' requests');
-    if(_self.requests.length > 0) {
-      _self.processRequest(_self.requests.shift());
-    }
-  };
   this.iden = function(socket) {
-    _self.addRequest(socket, { command: 'IDEN' });
-    _self.processQueue();
+    addRequest(socket, { command: 'IDEN' });
+    processQueue();
   };
   this.startAdq = function() {
     serverConfig.config().then(function(config) {
       // incluir todos los canales analogicos
-      _self.addGlobalRequest({ command: 'SCAN', params: '02'});
+      addGlobalRequest({ command: 'SCAN', params: '02'});
       // incluir entradas digitales
-      _self.addGlobalRequest({ command: 'CLDIS', dont_wait: true });
+      addGlobalRequest({ command: 'CLDIS', dont_wait: true });
       // iniciar adquisicion
-      _self.addGlobalRequest({ command: 'INIL', params: convertInterval(config.interval) });
+      addGlobalRequest({ command: 'INIL', params: convertInterval(config.interval) });
       // procesar los comandos
-      _self.processQueue();
+      processQueue();
       // avisar a todos
-      _self.connHandler.broadcast({ type:'server:set_acq_status', data:true });
+      _connHandler.broadcast({ type:'server:set_acq_status', data:true });
       _running = true;
     });
   };
   this.stopAdq = function() {
     clearTimeout(_samplesTimeoutId);
-    _self.addGlobalRequest({ command: 'DETA' });
-    _self.processQueue();
-    _self.connHandler.broadcast({ type:'server:set_acq_status', data:false });
+    addGlobalRequest({ command: 'DETA' });
+    processQueue();
+    _connHandler.broadcast({ type:'server:set_acq_status', data:false });
     _running = false;
   };
   this.restart = function() {
-    _self._serialPort.close();
+    _serialPort.close();
   };
   this.init = function() {
     init();
@@ -274,15 +291,25 @@ function SerialDispatcher(serverConfig) {
     return _running;
   };
   this.turnOn = function() {
-    _self.addGlobalRequest({ command: 'WRDO', params: '0' });
-    _self.processQueue();
-    _self.connHandler.broadcast({ type: 'server:lights', data: true });
+    addGlobalRequest({ command: 'WRDO', params: '0' });
+    processQueue();
+    _connHandler.broadcast({ type: 'server:lights', data: true });
   };
   this.turnOff = function() {
-    _self.addGlobalRequest({ command: 'WRDO', params: '3' });
-    _self.processQueue();
-    _self.connHandler.broadcast({ type: 'server:lights', data: false });
-  }
+    addGlobalRequest({ command: 'WRDO', params: '3' });
+    processQueue();
+    _connHandler.broadcast({ type: 'server:lights', data: false });
+  };
+  this.addSocket = function(socket) {
+    _connHandler.addSocket(socket);
+  };
+  this.removeSocket = function(socketId) {
+    _connHandler.removeSocket(socketId);
+  };
+  this.broadcast = function(event) {
+    _connHandler.broadcast(event);
+  };
+
 }
 
 module.exports = SerialDispatcher;

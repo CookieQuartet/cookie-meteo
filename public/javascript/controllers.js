@@ -26,6 +26,7 @@ angular.module('CookieMeteo')
         );
       }
     };
+    $rootScope.progress = false;
     // usuario hace login
     $rootScope.$on('login', function(event) {
       $scope.config = {

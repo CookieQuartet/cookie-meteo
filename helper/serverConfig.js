@@ -78,6 +78,7 @@ var ServerConfig = function(mailer) {
           }
         }
       };
+
   // registro del login en Parse
   this.login = function(login, cb) {
     app.loginUser(login.username, login.password, function(err, response) {
@@ -128,20 +129,6 @@ var ServerConfig = function(mailer) {
     });
     return defer.promise;
   };
-
-  this.set = function(key, value) {
-    app.insert(key, value, function (err, response) {
-      console.log(response);
-    });
-  };
-
-  this.get = function(type, key) {
-    var defer = Q.defer();
-    app.find(type, {objectId: key}, function (err, response) {
-      defer.resolve(response);
-    });
-    return defer.promise;
-  };
   // devuelve la configuracion
   this.config = function() {
     if(firstTime) {
@@ -152,17 +139,18 @@ var ServerConfig = function(mailer) {
       return defer.promise;
     }
   };
-
   this.sendMail = function(alarms) {
     var destination = config.mailAlarm,
         subject = 'Estación metereológica - Alarmas',
-        template = 'Estación metereológica\n' +
+        template = '<h1>Estación metereológica</h1>\n' +
             '<% _.each(alarms, function(item) { %>' +
-            '<%=item.date%> : <%=item.message%><%="|"%>' +
+            '<p><%=item.date%> : <%=item.message%></p><br>' +
             '<% }); %>',
         compiled = _.template(template),
+
         content = compiled({ alarms: alarms }).replace(/\|/g, '\n');
 
+    // habilitar cuando haya que hacer la demostracion
     mailer.sendEmail(destination, subject, content);
   };
   // inicializacion

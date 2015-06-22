@@ -1,5 +1,5 @@
 /**
- * Created by Julián on 17/06/2015.
+ * Created by Juliï¿½n on 17/06/2015.
  */
 
 var nodemailer = require('nodemailer');
@@ -15,7 +15,7 @@ var transporter = nodemailer.createTransport({
 var EmailService = {
     sendEmail: function (destination, subject, content) {
         var mailOptions = {
-            from: 'Estación Meteorológica', // sender address
+            from: 'EstaciÃ³n MeteorolÃ³gica', // sender address
             to: destination, // list of receivers
             subject: subject, // Subject line
             text: '', // plaintext body

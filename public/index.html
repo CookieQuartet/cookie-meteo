@@ -51,7 +51,8 @@
                 </md-button>
             </div>
         </md-toolbar>
-        <section layout="row" layout-fill flex>
+        <md-progress-linear md-mode="indeterminate" ng-class="{ 'cmi-hide': !$rootScope.progress }"></md-progress-linear>
+        <section layout="row" layout-fill flex style="margin-top:10px;" >
             <md-content flex layout-padding>
                 <div ui-view style="height:600px;"></div>
             </md-content>
@@ -66,11 +67,9 @@
 <script src="highcharts/highcharts.src.js"></script>
 <script src="highchart-ng/dist/highcharts-ng.js"></script>
 <script src="datejs/build/date-es-AR.js"></script>
-<!--<script src="/javascripts/parse-1.4.2.js"></script>-->
 <script src="parse/build/parse-latest.js"></script>
 <script src="socket.io/node_modules/socket.io-client/socket.io.js"></script>
 <script src="javascript/app.js"></script>
 <script src="javascript/controllers.js"></script>
 <script src="javascript/services.js"></script>
 <script src="javascript/directives.js"></script>
-<!--<script src="javascript/client.js"></script>-->

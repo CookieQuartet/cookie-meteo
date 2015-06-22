@@ -6,16 +6,19 @@ var SerialPort = sPort.SerialPort;
 
 var timeoutId = null;
 
-function reconnectSerialPort(port, onDataCallback) {
+function reconnectSerialPort(port, onDataCallback, onOpenCallback, _config) {
   console.log('INICIANDO RECONEXION');
-  timeoutId = setTimeout(function(){
-    console.log('RECONECTANDO...');
-    connectSerialPort(port, onDataCallback);
-  }, 2000);
+  _config.config().then(function(config) {
+    timeoutId = setTimeout(function(){
+      console.log('RECONECTANDO...');
+      connectSerialPort(config.port, onDataCallback, onOpenCallback, _config);
+    }, 2000);
+  });
 }
 
-function connectSerialPort(port, onDataCallback, onOpenCallback) {
+function connectSerialPort(port, onDataCallback, onOpenCallback, config) {
   var _self = this,
+      _config = config,
       serialPort = new SerialPort(port, {
         baudRate: 115200,
         parser: sPort.parsers.readline("\n")
@@ -35,11 +38,11 @@ function connectSerialPort(port, onDataCallback, onOpenCallback) {
   });
   serialPort.on('close', function(){
     console.log('PUERTO CERRADO');
-    reconnectSerialPort(port, onDataCallback);
+    reconnectSerialPort(port, onDataCallback, onOpenCallback, _config);
   });
   serialPort.on('error', function (err) {
     console.error("ERROR", err);
-    reconnectSerialPort(port, onDataCallback);
+    reconnectSerialPort(port, onDataCallback, onOpenCallback, _config);
   });
   return serialPort;
 }
